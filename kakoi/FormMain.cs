@@ -1003,6 +1003,8 @@ namespace omochat
                     _formSetting.textBoxNsec.Enabled = false;
                 }
 
+                dataGridViewNotes.Columns["geohash"].Visible = false;
+
                 ButtonStart_Click(sender, e);
             }
             catch (Exception ex)

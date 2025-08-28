@@ -1,5 +1,8 @@
-﻿using omochat.Properties;
+﻿using NBitcoin.Secp256k1;
+using omochat.Properties;
 using System.Diagnostics;
+using NNostr.Client;
+using NNostr.Client.Protocols;
 
 namespace omochat
 {
@@ -88,6 +91,22 @@ namespace omochat
             textBoxNsec.Enabled = true;
             textBoxNsec.Text = string.Empty;
             textBoxNpub.Text = string.Empty;
+        }
+
+        private void buttonCreate_Click(object sender, EventArgs e)
+        {
+            byte[] randomBytes = new byte[32];
+            // 乱数生成
+            using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomBytes);
+            }
+            // 秘密鍵の作成
+            var key = ECPrivKey.Create(randomBytes);
+
+            string nsec = key.ToNIP19();
+            textBoxNsec.Text = nsec;
+            textBoxNpub.Text = nsec.GetNpub();
         }
     }
 }

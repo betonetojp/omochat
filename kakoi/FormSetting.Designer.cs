@@ -51,6 +51,7 @@
             label5 = new Label();
             label6 = new Label();
             checkBoxAddTeleport = new CheckBox();
+            buttonCreate = new Button();
             ((System.ComponentModel.ISupportInitialize)trackBarOpacity).BeginInit();
             SuspendLayout();
             // 
@@ -65,7 +66,7 @@
             textBoxNsec.PasswordChar = '*';
             textBoxNsec.PlaceholderText = "nsec1...";
             textBoxNsec.Size = new Size(221, 23);
-            textBoxNsec.TabIndex = 7;
+            textBoxNsec.TabIndex = 8;
             textBoxNsec.Leave += TextBoxNsec_Leave;
             // 
             // trackBarOpacity
@@ -108,7 +109,7 @@
             checkBoxAddClient.Location = new Point(12, 270);
             checkBoxAddClient.Name = "checkBoxAddClient";
             checkBoxAddClient.Size = new Size(100, 19);
-            checkBoxAddClient.TabIndex = 10;
+            checkBoxAddClient.TabIndex = 11;
             checkBoxAddClient.Text = "Add client tag";
             checkBoxAddClient.UseVisualStyleBackColor = true;
             // 
@@ -130,7 +131,7 @@
             linkLabelIcons8.Location = new Point(271, 297);
             linkLabelIcons8.Name = "linkLabelIcons8";
             linkLabelIcons8.Size = new Size(41, 15);
-            linkLabelIcons8.TabIndex = 13;
+            linkLabelIcons8.TabIndex = 14;
             linkLabelIcons8.TabStop = true;
             linkLabelIcons8.Text = "Icons8";
             linkLabelIcons8.LinkClicked += LinkLabelIcons8_LinkClicked;
@@ -147,7 +148,7 @@
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(12, 214);
+            label3.Location = new Point(12, 189);
             label3.Name = "label3";
             label3.Size = new Size(64, 15);
             label3.TabIndex = 0;
@@ -160,7 +161,7 @@
             checkBoxSendDSSTP.Location = new Point(118, 270);
             checkBoxSendDSSTP.Name = "checkBoxSendDSSTP";
             checkBoxSendDSSTP.Size = new Size(88, 19);
-            checkBoxSendDSSTP.TabIndex = 11;
+            checkBoxSendDSSTP.TabIndex = 12;
             checkBoxSendDSSTP.Text = "Send DSSTP";
             checkBoxSendDSSTP.UseVisualStyleBackColor = true;
             // 
@@ -171,7 +172,7 @@
             linkLabelVersion.Location = new Point(12, 297);
             linkLabelVersion.Name = "linkLabelVersion";
             linkLabelVersion.Size = new Size(37, 15);
-            linkLabelVersion.TabIndex = 12;
+            linkLabelVersion.TabIndex = 13;
             linkLabelVersion.TabStop = true;
             linkLabelVersion.Text = "v0.0.1";
             linkLabelVersion.LinkClicked += LinkLabelVersion_LinkClicked;
@@ -204,7 +205,7 @@
             textBoxNpub.PlaceholderText = "npub1...";
             textBoxNpub.ReadOnly = true;
             textBoxNpub.Size = new Size(250, 23);
-            textBoxNpub.TabIndex = 9;
+            textBoxNpub.TabIndex = 10;
             // 
             // buttonLogOut
             // 
@@ -213,7 +214,7 @@
             buttonLogOut.Location = new Point(309, 212);
             buttonLogOut.Name = "buttonLogOut";
             buttonLogOut.Size = new Size(23, 23);
-            buttonLogOut.TabIndex = 8;
+            buttonLogOut.TabIndex = 9;
             toolTipLogOut.SetToolTip(buttonLogOut, "Log out");
             buttonLogOut.UseVisualStyleBackColor = true;
             buttonLogOut.Click += ButtonLogOut_Click;
@@ -265,11 +266,23 @@
             checkBoxAddTeleport.Text = "Add teleport tag";
             checkBoxAddTeleport.UseVisualStyleBackColor = true;
             // 
+            // buttonCreate
+            // 
+            buttonCreate.AutoSize = true;
+            buttonCreate.Location = new Point(82, 183);
+            buttonCreate.Name = "buttonCreate";
+            buttonCreate.Size = new Size(100, 27);
+            buttonCreate.TabIndex = 7;
+            buttonCreate.Text = "Create new key";
+            buttonCreate.UseVisualStyleBackColor = true;
+            buttonCreate.Click += buttonCreate_Click;
+            // 
             // FormSetting
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
             ClientSize = new Size(344, 321);
+            Controls.Add(buttonCreate);
             Controls.Add(textBoxNickname);
             Controls.Add(textBoxGeohash);
             Controls.Add(buttonLogOut);
@@ -331,5 +344,6 @@
         internal TextBox textBoxGeohash;
         internal TextBox textBoxNickname;
         internal CheckBox checkBoxAddTeleport;
+        private Button buttonCreate;
     }
 }
