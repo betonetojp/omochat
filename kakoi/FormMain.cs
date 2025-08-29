@@ -223,8 +223,8 @@ namespace omochat
 
                     if (!string.IsNullOrEmpty(_nickname))
                     {
-                        Text = $"@{_nickname} #{_geohash}";
-                        notifyIcon.Text = $"omochat - @{_nickname} #{_geohash}";
+                        Text = $"@{_nickname}  #{_geohash}{(_addTeleport ? "📍" : "")}";
+                        notifyIcon.Text = $"omochat - @{_nickname}  #{_geohash}{(_addTeleport ? "📍" : "")}";
                     }
                 }
 
@@ -425,8 +425,9 @@ namespace omochat
                                 0,
                                 dto.ToLocalTime(),
                                 g[0],
-                                $"{headMark} {userName}",
-                                //nostrEvent.Content,
+                                //$"{headMark} {userName}",
+                                userName,
+                                "#" + nostrEvent.PublicKey[^4..],
                                 editedContent,
                                 nostrEvent.Id,
                                 nostrEvent.PublicKey,
@@ -765,12 +766,11 @@ namespace omochat
                     // フォロイーを購読をする
                     await NostrAccess.SubscribeFollowsAsync(_npubHex);
 
-                    // ログインユーザー名取得
-                    var loginName = GetName(_npubHex);
+                    // タイトルバーにニックネームとジオハッシュを表示
                     if (!string.IsNullOrEmpty(_nickname))
                     {
-                        Text = $"@{_nickname} #{_geohash}";
-                        notifyIcon.Text = $"omochat - @{_nickname} #{_geohash}";
+                        Text = $"@{_nickname}  #{_geohash}{(_addTeleport ? "📍" : "")}";
+                        notifyIcon.Text = $"omochat - @{_nickname}  #{_geohash}{(_addTeleport ? "📍" : "")}";
                     }
                 }
             }
@@ -1004,6 +1004,7 @@ namespace omochat
                 }
 
                 dataGridViewNotes.Columns["geohash"].Visible = false;
+                dataGridViewNotes.Columns["hash"].Visible = false;
 
                 ButtonStart_Click(sender, e);
             }
@@ -1054,6 +1055,11 @@ namespace omochat
             if (e.KeyCode == Keys.F4)
             {
                 dataGridViewNotes.Columns["name"].Visible = !dataGridViewNotes.Columns["name"].Visible;
+            }
+            // F5キーでhash列の表示切替
+            if (e.KeyCode == Keys.F5)
+            {
+                dataGridViewNotes.Columns["hash"].Visible = !dataGridViewNotes.Columns["hash"].Visible;
             }
 
             if (e.KeyCode == Keys.Escape)
@@ -1123,11 +1129,17 @@ namespace omochat
                 return;
             }
             DataGridViewRow selectedRow = dataGridViewNotes.Rows[e.RowIndex];
-            string id = (string)selectedRow.Cells["id"].Value;
-            string pubkey = (string)selectedRow.Cells["pubkey"].Value;
-            int kind = (int)selectedRow.Cells["kind"].Value;
+            string name = (string)selectedRow.Cells["name"].Value;
+            string hash = (string)selectedRow.Cells["hash"].Value;
 
-
+            if (!checkBoxPostBar.Checked)
+            {
+                checkBoxPostBar.Checked = true;
+            }
+            _formPostBar.Focus();
+            _formPostBar.textBoxPost.Text = $"@{name}{hash} ";
+            // キャレットを末尾に移動
+            _formPostBar.textBoxPost.SelectionStart = _formPostBar.textBoxPost.TextLength;
         }
         #endregion
 
@@ -1178,6 +1190,17 @@ namespace omochat
                     dataGridViewNotes.CurrentCell = dataGridViewNotes["note", dataGridViewNotes.Rows.Count - 1];
                 }
             }
+            // メンション入力
+            if (e.KeyCode == Keys.Right || e.KeyCode == Keys.F)
+            {
+                if (dataGridViewNotes.SelectedRows.Count > 0 && dataGridViewNotes.SelectedRows[0].Index >= 0)
+                {
+                    // 画面外に出た時サイズ変更用カーソルを記憶しているのでデフォルトに戻す
+                    Cursor.Current = Cursors.Default;
+                    var ev = new DataGridViewCellEventArgs(3, dataGridViewNotes.SelectedRows[0].Index);
+                    DataGridViewNotes_CellDoubleClick(sender, ev);
+                }
+            }
             // Webビュー表示
             if (e.KeyCode == Keys.Left || e.KeyCode == Keys.A)
             {
@@ -1205,6 +1228,44 @@ namespace omochat
                         checkBoxPostBar.Checked = true;
                     }
                     _formPostBar.Focus();
+                }
+            }
+            // Hキーでhug
+            if (e.KeyCode == Keys.H)
+            {
+                if (dataGridViewNotes.SelectedRows.Count > 0 && dataGridViewNotes.SelectedRows[0].Index >= 0)
+                {
+                    var name = (string)dataGridViewNotes.Rows[dataGridViewNotes.SelectedRows[0].Index].Cells["name"].Value;
+                    var hash = (string)dataGridViewNotes.Rows[dataGridViewNotes.SelectedRows[0].Index].Cells["hash"].Value;
+                    _formPostBar.textBoxPost.Text = $"* 🫂 {_nickname} hugs {name}{hash} *";
+                    
+                    _ = PostAsync();
+
+                    _formPostBar.textBoxPost.Text = string.Empty;
+                    _formPostBar.textBoxPost.PlaceholderText = string.Empty;
+                    _formPostBar.RootEvent = null;
+                    // デフォルトの色に戻す
+                    _formPostBar.textBoxPost.BackColor = SystemColors.Window;
+                    _formPostBar.buttonPost.BackColor = SystemColors.Control;
+                }
+            }
+            // Tキーでslap
+            if (e.KeyCode == Keys.T)
+            {
+                if (dataGridViewNotes.SelectedRows.Count > 0 && dataGridViewNotes.SelectedRows[0].Index >= 0)
+                {
+                    var name = (string)dataGridViewNotes.Rows[dataGridViewNotes.SelectedRows[0].Index].Cells["name"].Value;
+                    var hash = (string)dataGridViewNotes.Rows[dataGridViewNotes.SelectedRows[0].Index].Cells["hash"].Value;
+                    _formPostBar.textBoxPost.Text = $"* 🐟 {_nickname} slaps{name}{hash} around a bit with a large trout *";
+
+                    _ = PostAsync();
+
+                    _formPostBar.textBoxPost.Text = string.Empty;
+                    _formPostBar.textBoxPost.PlaceholderText = string.Empty;
+                    _formPostBar.RootEvent = null;
+                    // デフォルトの色に戻す
+                    _formPostBar.textBoxPost.BackColor = SystemColors.Window;
+                    _formPostBar.buttonPost.BackColor = SystemColors.Control;
                 }
             }
 
