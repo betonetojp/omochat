@@ -51,10 +51,10 @@
             toolStripMenuItem1 = new ToolStripSeparator();
             quitToolStripMenuItem = new ToolStripMenuItem();
             time = new DataGridViewTextBoxColumn();
-            geohash = new DataGridViewTextBoxColumn();
             name = new DataGridViewTextBoxColumn();
             hash = new DataGridViewTextBoxColumn();
             note = new DataGridViewTextBoxColumn();
+            geohash = new DataGridViewTextBoxColumn();
             id = new DataGridViewTextBoxColumn();
             pubkey = new DataGridViewTextBoxColumn();
             kind = new DataGridViewTextBoxColumn();
@@ -158,7 +158,7 @@
             dataGridViewNotes.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             dataGridViewNotes.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewNotes.ColumnHeadersVisible = false;
-            dataGridViewNotes.Columns.AddRange(new DataGridViewColumn[] { time, geohash, name, hash, note, id, pubkey, kind });
+            dataGridViewNotes.Columns.AddRange(new DataGridViewColumn[] { time, name, hash, note, geohash, id, pubkey, kind });
             dataGridViewCellStyle7.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle7.BackColor = SystemColors.Window;
             dataGridViewCellStyle7.Font = new Font("Yu Gothic UI", 9F);
@@ -230,24 +230,11 @@
             time.SortMode = DataGridViewColumnSortMode.NotSortable;
             time.Width = 5;
             // 
-            // geohash
-            // 
-            geohash.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.TopLeft;
-            dataGridViewCellStyle3.Font = new Font("メイリオ", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 128);
-            geohash.DefaultCellStyle = dataGridViewCellStyle3;
-            geohash.HeaderText = "geohash";
-            geohash.Name = "geohash";
-            geohash.ReadOnly = true;
-            geohash.Resizable = DataGridViewTriState.True;
-            geohash.SortMode = DataGridViewColumnSortMode.NotSortable;
-            geohash.Width = 5;
-            // 
             // name
             // 
-            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.TopLeft;
-            dataGridViewCellStyle4.Font = new Font("メイリオ", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 128);
-            name.DefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.TopLeft;
+            dataGridViewCellStyle3.Font = new Font("メイリオ", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 128);
+            name.DefaultCellStyle = dataGridViewCellStyle3;
             name.HeaderText = "name";
             name.Name = "name";
             name.ReadOnly = true;
@@ -257,9 +244,9 @@
             // hash
             // 
             hash.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.TopLeft;
-            dataGridViewCellStyle5.Font = new Font("メイリオ", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 128);
-            hash.DefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.TopLeft;
+            dataGridViewCellStyle4.Font = new Font("メイリオ", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 128);
+            hash.DefaultCellStyle = dataGridViewCellStyle4;
             hash.HeaderText = "hash";
             hash.Name = "hash";
             hash.ReadOnly = true;
@@ -269,14 +256,26 @@
             // note
             // 
             note.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.TopLeft;
-            dataGridViewCellStyle6.Font = new Font("メイリオ", 9F, FontStyle.Regular, GraphicsUnit.Point, 128);
-            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.True;
-            note.DefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.TopLeft;
+            dataGridViewCellStyle5.Font = new Font("メイリオ", 9F, FontStyle.Regular, GraphicsUnit.Point, 128);
+            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.True;
+            note.DefaultCellStyle = dataGridViewCellStyle5;
             note.HeaderText = "note";
             note.Name = "note";
             note.ReadOnly = true;
             note.SortMode = DataGridViewColumnSortMode.NotSortable;
+            // 
+            // geohash
+            // 
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.TopLeft;
+            dataGridViewCellStyle6.Font = new Font("メイリオ", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 128);
+            geohash.DefaultCellStyle = dataGridViewCellStyle6;
+            geohash.HeaderText = "geohash";
+            geohash.Name = "geohash";
+            geohash.ReadOnly = true;
+            geohash.Resizable = DataGridViewTriState.True;
+            geohash.SortMode = DataGridViewColumnSortMode.NotSortable;
+            geohash.Width = 30;
             // 
             // id
             // 
@@ -350,10 +349,10 @@
         private ToolStripSeparator toolStripMenuItem1;
         private ToolStripMenuItem quitToolStripMenuItem;
         private DataGridViewTextBoxColumn time;
-        private DataGridViewTextBoxColumn geohash;
         private DataGridViewTextBoxColumn name;
         private DataGridViewTextBoxColumn hash;
         private DataGridViewTextBoxColumn note;
+        private DataGridViewTextBoxColumn geohash;
         private DataGridViewTextBoxColumn id;
         private DataGridViewTextBoxColumn pubkey;
         private DataGridViewTextBoxColumn kind;

@@ -184,7 +184,7 @@
             Name = "FormManiacs";
             SizeGripStyle = SizeGripStyle.Show;
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "Mute and keyword notification";
+            Text = "Mute";
             FormClosing += FormManiacs_FormClosing;
             Load += FormManiacs_Load;
             KeyDown += FormManiacs_KeyDown;

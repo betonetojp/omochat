@@ -22,11 +22,14 @@ namespace omochat
             public bool TopMost { get; set; } = false;
             public double Opacity { get; set; } = 1.00;
             public bool MinimizeToTray { get; set; } = false;
+            public bool WorldView { get; set; } = false;
             public string Geohash { get; set; } = "xn";
             public bool AddTeleport { get; set; } = true;
             public string Nickname { get; set; } = "";
-            public bool SendDSSTP { get; set; } = false;
+            public bool AutoScroll { get; set; } = true;
+            public bool DescendingOrder { get; set; } = false;
             public bool AddClient { get; set; } = true;
+            public bool SendDSSTP { get; set; } = false;
 
             public string GridColor { get; set; } = "#FF1493";
             public string ReactionColor { get; set; } = "#FFFFE0";
@@ -76,6 +79,11 @@ namespace omochat
             get => _data.MinimizeToTray;
             set => _data.MinimizeToTray = value;
         }
+        public static bool WorldView
+        {
+            get => _data.WorldView;
+            set => _data.WorldView = value;
+        }
         public static string Geohash
         {
             get => _data.Geohash;
@@ -91,15 +99,25 @@ namespace omochat
             get => _data.Nickname;
             set => _data.Nickname = value;
         }
-        public static bool SendDSSTP
+        public static bool AutoScroll
         {
-            get => _data.SendDSSTP;
-            set => _data.SendDSSTP = value;
+            get => _data.AutoScroll;
+            set => _data.AutoScroll = value;
+        }
+        public static bool DescendingOrder
+        {
+            get => _data.DescendingOrder;
+            set => _data.DescendingOrder = value;
         }
         public static bool AddClient
         {
             get => _data.AddClient;
             set => _data.AddClient = value;
+        }
+        public static bool SendDSSTP
+        {
+            get => _data.SendDSSTP;
+            set => _data.SendDSSTP = value;
         }
 
         public static string GridColor

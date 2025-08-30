@@ -46,11 +46,17 @@ namespace omochat
         internal Dictionary<string, User?> Users = [];
 
         private bool _minimizeToTray;
-        private String _geohash = string.Empty;
+        private bool _worldView = false;
+        private string _geohash = string.Empty;
         private bool _addTeleport;
         private string _nickname = string.Empty;
-        private bool _sendDSSTP = true;
-        private bool _addClient;
+        private bool _autoScroll = true;
+        private bool _descendingOrder = false;
+        private bool _addClient = true;
+        private bool _sendDSSTP = false;
+
+
+
 
         private double _tempOpacity = 1.00;
 
@@ -138,10 +144,13 @@ namespace omochat
             _tempOpacity = Opacity;
             _formPostBar.Opacity = Opacity;
             _minimizeToTray = Setting.MinimizeToTray;
+            _worldView = Setting.WorldView;
             _geohash = Setting.Geohash;
             _addTeleport = Setting.AddTeleport;
             _nickname = Setting.Nickname;
             notifyIcon.Visible = _minimizeToTray;
+            _autoScroll = Setting.AutoScroll;
+            _descendingOrder = Setting.DescendingOrder;
             _sendDSSTP = Setting.SendDSSTP;
             _addClient = Setting.AddClient;
 
@@ -223,8 +232,8 @@ namespace omochat
 
                     if (!string.IsNullOrEmpty(_nickname))
                     {
-                        Text = $"@{_nickname}  #{_geohash}{(_addTeleport ? "📍" : "")}";
-                        notifyIcon.Text = $"omochat - @{_nickname}  #{_geohash}{(_addTeleport ? "📍" : "")}";
+                        Text = $"@{_nickname}  #{_geohash}{(_addTeleport ? "📍" : "")} {(_worldView ? "🌐" : "")}";
+                        notifyIcon.Text = $"omochat - @{_nickname}  #{_geohash}{(_addTeleport ? "📍" : "")} {(_worldView ? "🌐" : "")}";
                     }
                 }
 
@@ -348,11 +357,11 @@ namespace omochat
                         User? user = null;
 
                         // フォロイーチェック
-                        string headMark = "-";
+                        //string headMark = "-";
                         string speaker = "\\1"; //"\\u\\p[1]\\s[10]";
                         if (_followeesHexs.Contains(nostrEvent.PublicKey))
                         {
-                            headMark = "*";
+                            //headMark = "*";
                             // 本体側がしゃべる
                             speaker = "\\0"; //"\\h\\p[0]\\s[0]";
                         }
@@ -361,10 +370,15 @@ namespace omochat
                         if (20000 == nostrEvent.Kind)
                         {
                             var g = nostrEvent.GetTaggedData("g");
-                            if (g == null || g.Length == 0 || g[0] != _geohash)
+                            if (g == null || g.Length == 0)
                             {
                                 continue;
                             }
+                            if (!_worldView && g[0] != _geohash)
+                            {
+                                continue;
+                            }
+
                             string editedContent = content;
 
                             // ミュートしている時は表示しない
@@ -385,7 +399,6 @@ namespace omochat
                             user = await GetUserAsync(nostrEvent.PublicKey);
 
                             // ユーザー表示名取得
-                            userName = GetUserName(nostrEvent.PublicKey);
                             var n = nostrEvent.GetTaggedData("n");
                             if (n != null && 0 < n.Length)
                             {
@@ -421,24 +434,66 @@ namespace omochat
                             // グリッドに表示
                             //_noteEvents.AddFirst(nostrEvent);
                             DateTimeOffset dto = nostrEvent.CreatedAt ?? DateTimeOffset.Now;
-                            dataGridViewNotes.Rows.Insert(
-                                0,
-                                dto.ToLocalTime(),
-                                g[0],
-                                //$"{headMark} {userName}",
-                                userName,
-                                "#" + nostrEvent.PublicKey[^4..],
-                                editedContent,
-                                nostrEvent.Id,
-                                nostrEvent.PublicKey,
-                                nostrEvent.Kind
-                                );
-                            //dataGridViewNotes.Sort(dataGridViewNotes.Columns["time"], ListSortDirection.Descending);
-
-                            // リプライの時は背景色変更
-                            if (isReply)
+                            if (_descendingOrder)
                             {
-                                dataGridViewNotes.Rows[0].DefaultCellStyle.BackColor = Tools.HexToColor(Setting.ReplyColor);
+                                dataGridViewNotes.Rows.Insert(
+                                    0,
+                                    dto.ToLocalTime(),
+                                    //$"{headMark} {userName}",
+                                    userName,
+                                    "#" + nostrEvent.PublicKey[^4..],
+                                    editedContent,
+                                    g[0],
+                                    nostrEvent.Id,
+                                    nostrEvent.PublicKey,
+                                    nostrEvent.Kind
+                                    );
+                                //dataGridViewNotes.Sort(dataGridViewNotes.Columns["time"], ListSortDirection.Descending);
+
+                                if (dataGridViewNotes.Rows.Count > 0)
+                                {
+                                    // リプライの時は背景色変更
+                                    if (isReply)
+                                    {
+                                        dataGridViewNotes.Rows[0].DefaultCellStyle.BackColor = Tools.HexToColor(Setting.ReplyColor);
+                                    }
+
+                                    if (_autoScroll)
+                                    {
+                                        // 最上行にスクロール
+                                        dataGridViewNotes.FirstDisplayedScrollingRowIndex = 0;
+
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                dataGridViewNotes.Rows.Add(
+                                    dto.ToLocalTime(),
+                                    //$"{headMark} {userName}",
+                                    userName,
+                                    "#" + nostrEvent.PublicKey[^4..],
+                                    editedContent,
+                                    g[0],
+                                    nostrEvent.Id,
+                                    nostrEvent.PublicKey,
+                                    nostrEvent.Kind
+                                    );
+
+                                if (dataGridViewNotes.Rows.Count > 0)
+                                {
+                                    // リプライの時は背景色変更
+                                    if (isReply)
+                                    {
+                                        dataGridViewNotes.Rows[^1].DefaultCellStyle.BackColor = Tools.HexToColor(Setting.ReplyColor);
+                                    }
+
+                                    if (_autoScroll)
+                                    {
+                                        // 最下行にスクロール
+                                        dataGridViewNotes.FirstDisplayedScrollingRowIndex = dataGridViewNotes.Rows.Count - 1;
+                                    }
+                                }
                             }
 
                             // 行を装飾
@@ -467,7 +522,7 @@ namespace omochat
                                     { "Reference7", nostrEvent.PublicKey.ConvertToNpub() }, // npub1...
                                     { "Script", $"{speaker}{userName}\\n{editedContent}\\e" }
                                 };
-                                string sstpmsg = _SSTPMethod + "\r\n" + String.Join("\r\n", SSTPHeader.Select(kvp => kvp.Key + ": " + kvp.Value.Replace("\n", "\\n"))) + "\r\n\r\n";
+                                string sstpmsg = _SSTPMethod + "\r\n" + string.Join("\r\n", SSTPHeader.Select(kvp => kvp.Key + ": " + kvp.Value.Replace("\n", "\\n"))) + "\r\n\r\n";
                                 string r = _ds.GetSSTPResponse(_ghostName, sstpmsg);
                                 //Debug.WriteLine(r);
                             }
@@ -486,15 +541,24 @@ namespace omochat
         #region グリッド行装飾
         private async Task EditRowAsync(NostrEvent nostrEvent, User user, string userName)
         {
+            var addIndex = 0;
+            if (_descendingOrder)
+            {
+                addIndex = 0;
+            }
+            else
+            {
+                addIndex = dataGridViewNotes.Rows.Count - 1;
+            }
             // note列のToolTipにcontentを設定
-            dataGridViewNotes.Rows[0].Cells["note"].ToolTipText = nostrEvent.Content;
+            dataGridViewNotes.Rows[addIndex].Cells["note"].ToolTipText = nostrEvent.Content;
 
             //// pubkeyColorを取得
             //var pubkeyColor = Tools.HexToColor(nostrEvent.PublicKey[..6]); // [i..j] で「i番目からj番目の範囲」
             //// geohash列の背景色をpubkeyColorに変更
-            //dataGridViewNotes.Rows[0].Cells["geohash"].Style.BackColor = pubkeyColor;
+            //dataGridViewNotes.Rows[addIndex].Cells["geohash"].Style.BackColor = pubkeyColor;
             //// name列の文字色をpubkeyColorに変更
-            //dataGridViewNotes.Rows[0].Cells["name"].Style.ForeColor = pubkeyColor;
+            //dataGridViewNotes.Rows[addIndex].Cells["name"].Style.ForeColor = pubkeyColor;
 
             // クライアントタグによる背景色変更
             var userClient = nostrEvent.GetTaggedData("client");
@@ -508,8 +572,10 @@ namespace omochat
                 {
                     clientColor = Tools.HexToColor(client.ColorCode);
                 }
+                // ツールチップにcontentを設定
+                dataGridViewNotes.Rows[addIndex].Cells["time"].ToolTipText = userClient[0];
                 // time列の背景色をclientColorに変更
-                dataGridViewNotes.Rows[0].Cells["time"].Style.BackColor = clientColor;
+                dataGridViewNotes.Rows[addIndex].Cells["time"].Style.BackColor = clientColor;
             }
 
             // content-warning
@@ -524,11 +590,11 @@ namespace omochat
             }
             if (reason != null && 0 < reason.Length)
             {
-                dataGridViewNotes.Rows[0].Cells["note"].Value = "CW: " + reason[0];
-                //// ツールチップにcontentを設定
-                //dataGridViewNotes.Rows[0].Cells["note"].ToolTipText = nostrEvent.Content;
+                dataGridViewNotes.Rows[addIndex].Cells["note"].Value = "CW: " + reason[0];
+                // ツールチップにcontentを設定
+                dataGridViewNotes.Rows[addIndex].Cells["note"].ToolTipText = nostrEvent.Content;
                 // note列の背景色をCWColorに変更
-                dataGridViewNotes.Rows[0].Cells["note"].Style.BackColor = Tools.HexToColor(Setting.CWColor);
+                dataGridViewNotes.Rows[addIndex].Cells["note"].Style.BackColor = Tools.HexToColor(Setting.CWColor);
             }
         }
         #endregion
@@ -659,7 +725,7 @@ namespace omochat
                 tags.Add(new NostrEventTag()
                 {
                     TagIdentifier = "client",
-                    Data = ["omochat"]
+                    Data = ["omochat", "31990:21ac29561b5de90cdc21995fc0707525cd78c8a52d87721ab681d3d609d1e2df:1756530676223", "wss://relay.nostr.band"]
                 });
             }
             // create a new event
@@ -698,9 +764,12 @@ namespace omochat
             _formSetting.checkBoxTopMost.Checked = TopMost;
             _formSetting.trackBarOpacity.Value = (int)(Opacity * 100);
             _formSetting.checkBoxMinimizeToTray.Checked = _minimizeToTray;
+            _formSetting.checkBoxWorldView.Checked = _worldView;
             _formSetting.textBoxGeohash.Text = _geohash;
             _formSetting.checkBoxAddTeleport.Checked = _addTeleport;
             _formSetting.textBoxNickname.Text = _nickname;
+            _formSetting.checkBoxAutoScroll.Checked = _autoScroll;
+            _formSetting.checkBoxDescendingOrder.Checked = _descendingOrder;
             _formSetting.checkBoxSendDSSTP.Checked = _sendDSSTP;
             _formSetting.checkBoxAddClient.Checked = _addClient;
             _formSetting.textBoxNsec.Text = _nsec;
@@ -715,6 +784,7 @@ namespace omochat
             _tempOpacity = Opacity;
             _formPostBar.Opacity = Opacity;
             _minimizeToTray = _formSetting.checkBoxMinimizeToTray.Checked;
+            _worldView = _formSetting.checkBoxWorldView.Checked;
             _geohash = _formSetting.textBoxGeohash.Text;
             _addTeleport = _formSetting.checkBoxAddTeleport.Checked;
             _nickname = _formSetting.textBoxNickname.Text;
@@ -729,6 +799,8 @@ namespace omochat
             }
             notifyIcon.Visible = _minimizeToTray;
             _nsec = _formSetting.textBoxNsec.Text;
+            _autoScroll = _formSetting.checkBoxAutoScroll.Checked;
+            _descendingOrder = _formSetting.checkBoxDescendingOrder.Checked;
             _sendDSSTP = _formSetting.checkBoxSendDSSTP.Checked;
             _addClient = _formSetting.checkBoxAddClient.Checked;
             try
@@ -769,8 +841,8 @@ namespace omochat
                     // タイトルバーにニックネームとジオハッシュを表示
                     if (!string.IsNullOrEmpty(_nickname))
                     {
-                        Text = $"@{_nickname}  #{_geohash}{(_addTeleport ? "📍" : "")}";
-                        notifyIcon.Text = $"omochat - @{_nickname}  #{_geohash}{(_addTeleport ? "📍" : "")}";
+                        Text = $"@{_nickname}  #{_geohash}{(_addTeleport ? "📍" : "")} {(_worldView ? "🌐" : "")}";
+                        notifyIcon.Text = $"omochat - @{_nickname}  #{_geohash}{(_addTeleport ? "📍" : "")} {(_worldView ? "🌐" : "")}";
                     }
                 }
             }
@@ -786,9 +858,12 @@ namespace omochat
             Setting.TopMost = TopMost;
             Setting.Opacity = Opacity;
             Setting.MinimizeToTray = _minimizeToTray;
+            Setting.WorldView = _worldView;
             Setting.Geohash = _geohash;
             Setting.AddTeleport = _addTeleport;
             Setting.Nickname = _nickname;
+            Setting.AutoScroll = _autoScroll;
+            Setting.DescendingOrder = _descendingOrder;
             Setting.SendDSSTP = _sendDSSTP;
             Setting.AddClient = _addClient;
 
@@ -987,8 +1062,8 @@ namespace omochat
         // ロード時
         private void FormMain_Load(object sender, EventArgs e)
         {
-            // Ctrl + Shift + A をホットキーとして登録
-            RegisterHotKey(this.Handle, HOTKEY_ID, MOD_CONTROL | MOD_SHIFT, (int)Keys.A);
+            // Ctrl + Shift + Z をホットキーとして登録
+            RegisterHotKey(this.Handle, HOTKEY_ID, MOD_CONTROL | MOD_SHIFT, (int)Keys.Z);
 
             _formPostBar.ShowDialog();
 
@@ -1046,20 +1121,20 @@ namespace omochat
             {
                 dataGridViewNotes.Columns["time"].Visible = !dataGridViewNotes.Columns["time"].Visible;
             }
-            // F3キーでgeohash列の表示切替
+            // F3キーでname列の表示切替
             if (e.KeyCode == Keys.F3)
-            {
-                dataGridViewNotes.Columns["geohash"].Visible = !dataGridViewNotes.Columns["geohash"].Visible;
-            }
-            // F4キーでname列の表示切替
-            if (e.KeyCode == Keys.F4)
             {
                 dataGridViewNotes.Columns["name"].Visible = !dataGridViewNotes.Columns["name"].Visible;
             }
-            // F5キーでhash列の表示切替
-            if (e.KeyCode == Keys.F5)
+            // F4キーでhash列の表示切替
+            if (e.KeyCode == Keys.F4)
             {
                 dataGridViewNotes.Columns["hash"].Visible = !dataGridViewNotes.Columns["hash"].Visible;
+            }
+            // F5キーでgeohash列の表示切替
+            if (e.KeyCode == Keys.F5)
+            {
+                dataGridViewNotes.Columns["geohash"].Visible = !dataGridViewNotes.Columns["geohash"].Visible;
             }
 
             if (e.KeyCode == Keys.Escape)
@@ -1238,7 +1313,7 @@ namespace omochat
                     var name = (string)dataGridViewNotes.Rows[dataGridViewNotes.SelectedRows[0].Index].Cells["name"].Value;
                     var hash = (string)dataGridViewNotes.Rows[dataGridViewNotes.SelectedRows[0].Index].Cells["hash"].Value;
                     _formPostBar.textBoxPost.Text = $"* 🫂 {_nickname} hugs {name}{hash} *";
-                    
+
                     _ = PostAsync();
 
                     _formPostBar.textBoxPost.Text = string.Empty;
@@ -1256,7 +1331,7 @@ namespace omochat
                 {
                     var name = (string)dataGridViewNotes.Rows[dataGridViewNotes.SelectedRows[0].Index].Cells["name"].Value;
                     var hash = (string)dataGridViewNotes.Rows[dataGridViewNotes.SelectedRows[0].Index].Cells["hash"].Value;
-                    _formPostBar.textBoxPost.Text = $"* 🐟 {_nickname} slaps{name}{hash} around a bit with a large trout *";
+                    _formPostBar.textBoxPost.Text = $"* 🐟 {_nickname} slaps {name}{hash} around a bit with a large trout *";
 
                     _ = PostAsync();
 
