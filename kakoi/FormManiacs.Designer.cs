@@ -31,18 +31,18 @@
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormManiacs));
             dataGridViewUsers = new DataGridView();
+            buttonSave = new Button();
+            buttonDelete = new Button();
+            buttonReload = new Button();
             mute = new DataGridViewCheckBoxColumn();
             last_activity = new DataGridViewTextBoxColumn();
-            petname = new DataGridViewTextBoxColumn();
+            nickname = new DataGridViewTextBoxColumn();
             display_name = new DataGridViewTextBoxColumn();
             name = new DataGridViewTextBoxColumn();
             pubkey = new DataGridViewTextBoxColumn();
             nip05 = new DataGridViewTextBoxColumn();
             picture = new DataGridViewTextBoxColumn();
             created_at = new DataGridViewTextBoxColumn();
-            buttonSave = new Button();
-            buttonDelete = new Button();
-            buttonReload = new Button();
             ((System.ComponentModel.ISupportInitialize)dataGridViewUsers).BeginInit();
             SuspendLayout();
             // 
@@ -53,7 +53,7 @@
             dataGridViewUsers.AllowUserToResizeRows = false;
             dataGridViewUsers.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             dataGridViewUsers.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewUsers.Columns.AddRange(new DataGridViewColumn[] { mute, last_activity, petname, display_name, name, pubkey, nip05, picture, created_at });
+            dataGridViewUsers.Columns.AddRange(new DataGridViewColumn[] { mute, last_activity, nickname, display_name, name, pubkey, nip05, picture, created_at });
             dataGridViewUsers.Location = new Point(12, 12);
             dataGridViewUsers.Name = "dataGridViewUsers";
             dataGridViewUsers.RowHeadersVisible = false;
@@ -62,6 +62,39 @@
             dataGridViewUsers.Size = new Size(440, 359);
             dataGridViewUsers.StandardTab = true;
             dataGridViewUsers.TabIndex = 1;
+            // 
+            // buttonSave
+            // 
+            buttonSave.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonSave.Location = new Point(377, 406);
+            buttonSave.Name = "buttonSave";
+            buttonSave.Size = new Size(75, 23);
+            buttonSave.TabIndex = 4;
+            buttonSave.Text = "Save";
+            buttonSave.UseVisualStyleBackColor = true;
+            buttonSave.Click += ButtonSave_Click;
+            // 
+            // buttonDelete
+            // 
+            buttonDelete.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            buttonDelete.Location = new Point(12, 406);
+            buttonDelete.Name = "buttonDelete";
+            buttonDelete.Size = new Size(75, 23);
+            buttonDelete.TabIndex = 3;
+            buttonDelete.Text = "Delete";
+            buttonDelete.UseVisualStyleBackColor = true;
+            buttonDelete.Click += ButtonDelete_Click;
+            // 
+            // buttonReload
+            // 
+            buttonReload.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonReload.Location = new Point(12, 377);
+            buttonReload.Name = "buttonReload";
+            buttonReload.Size = new Size(75, 23);
+            buttonReload.TabIndex = 2;
+            buttonReload.Text = "Reload";
+            buttonReload.UseVisualStyleBackColor = true;
+            buttonReload.Click += ButtonReload_Click;
             // 
             // mute
             // 
@@ -81,11 +114,12 @@
             last_activity.ReadOnly = true;
             last_activity.Width = 94;
             // 
-            // petname
+            // nickname
             // 
-            petname.HeaderText = "petname";
-            petname.MinimumWidth = 20;
-            petname.Name = "petname";
+            nickname.HeaderText = "Bitchat name";
+            nickname.MinimumWidth = 20;
+            nickname.Name = "nickname";
+            nickname.ReadOnly = true;
             // 
             // display_name
             // 
@@ -136,39 +170,6 @@
             created_at.ReadOnly = true;
             created_at.Width = 86;
             // 
-            // buttonSave
-            // 
-            buttonSave.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonSave.Location = new Point(377, 406);
-            buttonSave.Name = "buttonSave";
-            buttonSave.Size = new Size(75, 23);
-            buttonSave.TabIndex = 4;
-            buttonSave.Text = "Save";
-            buttonSave.UseVisualStyleBackColor = true;
-            buttonSave.Click += ButtonSave_Click;
-            // 
-            // buttonDelete
-            // 
-            buttonDelete.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            buttonDelete.Location = new Point(12, 406);
-            buttonDelete.Name = "buttonDelete";
-            buttonDelete.Size = new Size(75, 23);
-            buttonDelete.TabIndex = 3;
-            buttonDelete.Text = "Delete";
-            buttonDelete.UseVisualStyleBackColor = true;
-            buttonDelete.Click += ButtonDelete_Click;
-            // 
-            // buttonReload
-            // 
-            buttonReload.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonReload.Location = new Point(12, 377);
-            buttonReload.Name = "buttonReload";
-            buttonReload.Size = new Size(75, 23);
-            buttonReload.TabIndex = 2;
-            buttonReload.Text = "Reload";
-            buttonReload.UseVisualStyleBackColor = true;
-            buttonReload.Click += ButtonReload_Click;
-            // 
             // FormManiacs
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
@@ -200,7 +201,7 @@
         private Button buttonReload;
         private DataGridViewCheckBoxColumn mute;
         private DataGridViewTextBoxColumn last_activity;
-        private DataGridViewTextBoxColumn petname;
+        private DataGridViewTextBoxColumn nickname;
         private DataGridViewTextBoxColumn display_name;
         private DataGridViewTextBoxColumn name;
         private DataGridViewTextBoxColumn pubkey;

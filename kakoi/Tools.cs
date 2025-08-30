@@ -17,8 +17,8 @@ namespace omochat
         public bool Mute { get; set; }
         [JsonPropertyName("last_activity")]
         public DateTime? LastActivity { get; set; }
-        [JsonPropertyName("petname")]
-        public string? PetName { get; set; }
+        [JsonPropertyName("nickname")]
+        public string? Nickname { get; set; }
         [JsonPropertyName("display_name")]
         public string? DisplayName { get; set; }
         [JsonPropertyName("name")]

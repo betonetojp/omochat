@@ -29,10 +29,10 @@ namespace omochat
         /// タイムライン購読ID
         /// </summary>
         private static readonly string _subscriptionId = Guid.NewGuid().ToString("N");
-        /// <summary>
-        /// フォロイー購読ID
-        /// </summary>
-        private static readonly string _getFolloweesSubscriptionId = Guid.NewGuid().ToString("N");
+        ///// <summary>
+        ///// フォロイー購読ID
+        ///// </summary>
+        //private static readonly string _getFolloweesSubscriptionId = Guid.NewGuid().ToString("N");
         /// <summary>
         /// プロフィール購読ID
         /// </summary>
@@ -57,10 +57,10 @@ namespace omochat
         /// タイムライン購読ID
         /// </summary>
         public static string SubscriptionId => _subscriptionId;
-        /// <summary>
-        /// フォロイー購読ID
-        /// </summary>
-        public static string GetFolloweesSubscriptionId => _getFolloweesSubscriptionId;
+        ///// <summary>
+        ///// フォロイー購読ID
+        ///// </summary>
+        //public static string GetFolloweesSubscriptionId => _getFolloweesSubscriptionId;
         /// <summary>
         /// プロフィール購読ID
         /// </summary>
@@ -182,24 +182,24 @@ namespace omochat
         /// フォロイー購読処理
         /// </summary>
         /// <param name="author"></param>
-        public static async Task SubscribeFollowsAsync(string author)
-        {
-            if (_clients == null)
-            {
-                return;
-            }
+        //public static async Task SubscribeFollowsAsync(string author)
+        //{
+        //    if (_clients == null)
+        //    {
+        //        return;
+        //    }
 
-            await _clients.CreateSubscription(
-                _getFolloweesSubscriptionId,
-                [
-                        new NostrSubscriptionFilter
-                        {
-                            Kinds = [3],
-                            Authors = [author]
-                        }
-                ]
-            );
-        }
+        //    await _clients.CreateSubscription(
+        //        _getFolloweesSubscriptionId,
+        //        [
+        //                new NostrSubscriptionFilter
+        //                {
+        //                    Kinds = [3],
+        //                    Authors = [author]
+        //                }
+        //        ]
+        //    );
+        //}
         #endregion
 
         #region プロフィール購読処理
@@ -236,7 +236,7 @@ namespace omochat
             if (_clients != null)
             {
                 _ = _clients.CloseSubscription(_subscriptionId);
-                _ = _clients.CloseSubscription(_getFolloweesSubscriptionId);
+                //_ = _clients.CloseSubscription(_getFolloweesSubscriptionId);
                 _ = _clients.CloseSubscription(_getProfilesSubscriptionId);
             }
         }

@@ -20,7 +20,7 @@ namespace omochat
                     dataGridViewUsers.Rows.Add(
                         user.Value?.Mute,
                         user.Value?.LastActivity,
-                        user.Value?.PetName,
+                        user.Value?.Nickname,
                         user.Value?.DisplayName,
                         user.Value?.Name,
                         user.Key,
@@ -48,7 +48,7 @@ namespace omochat
                         {
                             Mute = (bool)(row.Cells["mute"].Value ?? false),
                             LastActivity = (DateTime?)row.Cells["last_activity"].Value ?? null,
-                            PetName = (string)row.Cells["petname"].Value,
+                            Nickname = (string)row.Cells["nickname"].Value,
                             DisplayName = (string)row.Cells["display_name"].Value,
                             Name = (string)row.Cells["name"].Value,
                             Nip05 = (string)row.Cells["nip05"].Value,

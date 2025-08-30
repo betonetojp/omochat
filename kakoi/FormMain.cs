@@ -37,10 +37,6 @@ namespace omochat
         private string _npubHex = string.Empty;
 
         /// <summary>
-        /// フォロイー公開鍵のハッシュセット
-        /// </summary>
-        private readonly HashSet<string> _followeesHexs = [];
-        /// <summary>
         /// ユーザー辞書
         /// </summary>
         internal Dictionary<string, User?> Users = [];
@@ -227,8 +223,8 @@ namespace omochat
                 // ログイン済みの時
                 if (!string.IsNullOrEmpty(_npubHex))
                 {
-                    // フォロイーを購読をする
-                    await NostrAccess.SubscribeFollowsAsync(_npubHex);
+                    //// フォロイーを購読をする
+                    //await NostrAccess.SubscribeFollowsAsync(_npubHex);
 
                     if (!string.IsNullOrEmpty(_nickname))
                     {
@@ -257,38 +253,7 @@ namespace omochat
         /// <param name="args"></param>
         private async void OnClientOnUsersInfoEventsReceived(object? sender, (string subscriptionId, NostrEvent[] events) args)
         {
-            if (args.subscriptionId == NostrAccess.GetFolloweesSubscriptionId)
-            {
-                #region フォロイー購読
-                foreach (var nostrEvent in args.events)
-                {
-                    // フォローリスト
-                    if (3 == nostrEvent.Kind)
-                    {
-                        var tags = nostrEvent.Tags;
-                        foreach (var tag in tags)
-                        {
-                            if ("p" == tag.TagIdentifier)
-                            {
-                                // 公開鍵をハッシュに保存
-                                _followeesHexs.Add(tag.Data[0]);
-
-                                // petnameをユーザー辞書に保存
-                                if (2 < tag.Data.Count)
-                                {
-                                    Users.TryGetValue(tag.Data[0], out User? user);
-                                    if (user != null)
-                                    {
-                                        user.PetName = tag.Data[2];
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                #endregion
-            }
-            else if (args.subscriptionId == NostrAccess.GetProfilesSubscriptionId)
+            if (args.subscriptionId == NostrAccess.GetProfilesSubscriptionId)
             {
                 #region プロフィール購読
                 foreach (var nostrEvent in args.events)
@@ -311,13 +276,13 @@ namespace omochat
                             }
                             if (false == existingUserData?.Mute)
                             {
-                                // 既にミュートオフのMostrアカウントのミュートを解除
+                                // 既にミュートオフのアカウントのミュートを解除
                                 newUserData.Mute = false;
                             }
                             if (cratedAt == null || (cratedAt < newUserData.CreatedAt))
                             {
                                 newUserData.LastActivity = DateTime.Now;
-                                newUserData.PetName = existingUserData?.PetName;
+                                newUserData.Nickname = existingUserData?.Nickname;
                                 Tools.SaveUsers(Users);
                                 // 辞書に追加（上書き）
                                 Users[nostrEvent.PublicKey] = newUserData;
@@ -353,18 +318,12 @@ namespace omochat
                     var content = nostrEvent.Content;
                     if (content != null)
                     {
-                        string userName = string.Empty;
+                        string nickname = string.Empty;
                         User? user = null;
 
-                        // フォロイーチェック
-                        //string headMark = "-";
                         string speaker = "\\1"; //"\\u\\p[1]\\s[10]";
-                        if (_followeesHexs.Contains(nostrEvent.PublicKey))
-                        {
-                            //headMark = "*";
-                            // 本体側がしゃべる
-                            speaker = "\\0"; //"\\h\\p[0]\\s[0]";
-                        }
+                        //// 本体側がしゃべる
+                        //string speaker = "\\0"; //"\\h\\p[0]\\s[0]";
 
                         #region テキストノート
                         if (20000 == nostrEvent.Kind)
@@ -402,11 +361,30 @@ namespace omochat
                             var n = nostrEvent.GetTaggedData("n");
                             if (n != null && 0 < n.Length)
                             {
-                                userName = n[0];
+                                nickname = n[0];
+                                if (user != null)
+                                {
+                                    user.Nickname = nickname;
+                                    user.LastActivity = DateTime.Now;
+                                    Tools.SaveUsers(Users);
+                                    // 辞書に追加（上書き）
+                                    Users[nostrEvent.PublicKey] = user;
+                                }
+                                else
+                                {
+                                    var newUserData = new User
+                                    {
+                                        Nickname = n[0],
+                                        LastActivity = DateTime.Now
+                                    };
+                                    Tools.SaveUsers(Users);
+                                    // 辞書に追加（上書き）
+                                    Users[nostrEvent.PublicKey] = newUserData;
+                                }
                             }
                             else
                             {
-                                userName = GetUserName(nostrEvent.PublicKey);
+                                nickname = GetUserName(nostrEvent.PublicKey);
                             }
 
                             bool isReply = false;
@@ -440,7 +418,7 @@ namespace omochat
                                     0,
                                     dto.ToLocalTime(),
                                     //$"{headMark} {userName}",
-                                    userName,
+                                    nickname,
                                     "#" + nostrEvent.PublicKey[^4..],
                                     editedContent,
                                     g[0],
@@ -471,7 +449,7 @@ namespace omochat
                                 dataGridViewNotes.Rows.Add(
                                     dto.ToLocalTime(),
                                     //$"{headMark} {userName}",
-                                    userName,
+                                    nickname,
                                     "#" + nostrEvent.PublicKey[^4..],
                                     editedContent,
                                     g[0],
@@ -497,7 +475,7 @@ namespace omochat
                             }
 
                             // 行を装飾
-                            await EditRowAsync(nostrEvent, user, userName);
+                            await EditRowAsync(nostrEvent, user, nickname);
 
                             // SSPに送る
                             if (_sendDSSTP && _ds != null)
@@ -520,7 +498,7 @@ namespace omochat
                                     { "Reference5", user?.Picture ?? string.Empty }, // picture
                                     { "Reference6", nevent }, // nevent1...
                                     { "Reference7", nostrEvent.PublicKey.ConvertToNpub() }, // npub1...
-                                    { "Script", $"{speaker}{userName}\\n{editedContent}\\e" }
+                                    { "Script", $"{speaker}{nickname}\\n{editedContent}\\e" }
                                 };
                                 string sstpmsg = _SSTPMethod + "\r\n" + string.Join("\r\n", SSTPHeader.Select(kvp => kvp.Key + ": " + kvp.Value.Replace("\n", "\\n"))) + "\r\n\r\n";
                                 string r = _ds.GetSSTPResponse(_ghostName, sstpmsg);
@@ -528,7 +506,7 @@ namespace omochat
                             }
 
                             // 改行をスペースに置き換えてログ表示
-                            Debug.WriteLine($"{userName}: {content.Replace('\n', ' ')}");
+                            Debug.WriteLine($"{nickname}: {content.Replace('\n', ' ')}");
                         }
                         #endregion
                     }
@@ -807,7 +785,6 @@ namespace omochat
             {
                 // 別アカウントログイン失敗に備えてクリアしておく
                 _npubHex = string.Empty;
-                _followeesHexs.Clear();
                 _formPostBar.textBoxPost.PlaceholderText = "omochat";
                 Text = "omochat";
                 notifyIcon.Text = "omochat";
@@ -835,8 +812,8 @@ namespace omochat
                             break;
                     }
 
-                    // フォロイーを購読をする
-                    await NostrAccess.SubscribeFollowsAsync(_npubHex);
+                    //// フォロイーを購読をする
+                    //await NostrAccess.SubscribeFollowsAsync(_npubHex);
 
                     // タイトルバーにニックネームとジオハッシュを表示
                     if (!string.IsNullOrEmpty(_nickname))
@@ -972,10 +949,10 @@ namespace omochat
                 {
                     userName = $"{user.Name}";
                 }
-                // petnameがある場合はpetnameとする
-                if (!string.IsNullOrEmpty(user?.PetName))
+                // nicknameがある場合はnicknameとする
+                if (!string.IsNullOrEmpty(user?.Nickname))
                 {
-                    userName = $"{user.PetName}";
+                    userName = $"{user.Nickname}";
                 }
                 // 取得日更新
                 user.LastActivity = DateTime.Now;
