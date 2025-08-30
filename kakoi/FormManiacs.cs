@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using omochat.Properties;
+using System.ComponentModel;
 
 namespace omochat
 {
@@ -31,6 +32,9 @@ namespace omochat
                 }
                 dataGridViewUsers.Sort(dataGridViewUsers.Columns["last_activity"], ListSortDirection.Descending);
                 dataGridViewUsers.ClearSelection();
+
+                textBoxNameMute.Text = string.Join("\r\n", MainForm.NameMute);
+                textBoxChatMute.Text = string.Join("\r\n", MainForm.ChatMute);
             }
         }
 
@@ -59,6 +63,8 @@ namespace omochat
                     }
                 }
                 MainForm.Users = users;
+                MainForm.NameMute = [.. textBoxNameMute.Text.Split(["\r\n"], StringSplitOptions.RemoveEmptyEntries)];
+                MainForm.ChatMute = [.. textBoxChatMute.Text.Split(["\r\n"], StringSplitOptions.RemoveEmptyEntries)];
             }
             Close();
         }
@@ -68,7 +74,11 @@ namespace omochat
             if (MainForm != null)
             {
                 Tools.SaveUsers(MainForm.Users);
+                Tools.SaveNameMute(MainForm.NameMute);
+                Tools.SaveChatMute(MainForm.ChatMute);
                 MainForm.Users = Tools.LoadUsers();
+                MainForm.NameMute = Tools.LoadNameMute();
+                MainForm.ChatMute = Tools.LoadChatMute();
             }
         }
 
@@ -91,6 +101,11 @@ namespace omochat
             {
                 Close();
             }
+        }
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

@@ -31,9 +31,6 @@
             DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormManiacs));
             dataGridViewUsers = new DataGridView();
-            buttonSave = new Button();
-            buttonDelete = new Button();
-            buttonReload = new Button();
             mute = new DataGridViewCheckBoxColumn();
             last_activity = new DataGridViewTextBoxColumn();
             nickname = new DataGridViewTextBoxColumn();
@@ -43,6 +40,13 @@
             nip05 = new DataGridViewTextBoxColumn();
             picture = new DataGridViewTextBoxColumn();
             created_at = new DataGridViewTextBoxColumn();
+            buttonSave = new Button();
+            buttonDelete = new Button();
+            buttonReload = new Button();
+            textBoxNameMute = new TextBox();
+            labelKeywords = new Label();
+            textBoxChatMute = new TextBox();
+            label1 = new Label();
             ((System.ComponentModel.ISupportInitialize)dataGridViewUsers).BeginInit();
             SuspendLayout();
             // 
@@ -59,42 +63,9 @@
             dataGridViewUsers.RowHeadersVisible = false;
             dataGridViewUsers.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridViewUsers.ShowCellToolTips = false;
-            dataGridViewUsers.Size = new Size(440, 359);
+            dataGridViewUsers.Size = new Size(440, 291);
             dataGridViewUsers.StandardTab = true;
             dataGridViewUsers.TabIndex = 1;
-            // 
-            // buttonSave
-            // 
-            buttonSave.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonSave.Location = new Point(377, 406);
-            buttonSave.Name = "buttonSave";
-            buttonSave.Size = new Size(75, 23);
-            buttonSave.TabIndex = 4;
-            buttonSave.Text = "Save";
-            buttonSave.UseVisualStyleBackColor = true;
-            buttonSave.Click += ButtonSave_Click;
-            // 
-            // buttonDelete
-            // 
-            buttonDelete.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            buttonDelete.Location = new Point(12, 406);
-            buttonDelete.Name = "buttonDelete";
-            buttonDelete.Size = new Size(75, 23);
-            buttonDelete.TabIndex = 3;
-            buttonDelete.Text = "Delete";
-            buttonDelete.UseVisualStyleBackColor = true;
-            buttonDelete.Click += ButtonDelete_Click;
-            // 
-            // buttonReload
-            // 
-            buttonReload.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonReload.Location = new Point(12, 377);
-            buttonReload.Name = "buttonReload";
-            buttonReload.Size = new Size(75, 23);
-            buttonReload.TabIndex = 2;
-            buttonReload.Text = "Reload";
-            buttonReload.UseVisualStyleBackColor = true;
-            buttonReload.Click += ButtonReload_Click;
             // 
             // mute
             // 
@@ -170,11 +141,91 @@
             created_at.ReadOnly = true;
             created_at.Width = 86;
             // 
+            // buttonSave
+            // 
+            buttonSave.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonSave.Location = new Point(377, 406);
+            buttonSave.Name = "buttonSave";
+            buttonSave.Size = new Size(75, 23);
+            buttonSave.TabIndex = 6;
+            buttonSave.Text = "Save";
+            buttonSave.UseVisualStyleBackColor = true;
+            buttonSave.Click += ButtonSave_Click;
+            // 
+            // buttonDelete
+            // 
+            buttonDelete.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            buttonDelete.Location = new Point(12, 309);
+            buttonDelete.Name = "buttonDelete";
+            buttonDelete.Size = new Size(75, 23);
+            buttonDelete.TabIndex = 2;
+            buttonDelete.Text = "Delete";
+            buttonDelete.UseVisualStyleBackColor = true;
+            buttonDelete.Click += ButtonDelete_Click;
+            // 
+            // buttonReload
+            // 
+            buttonReload.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            buttonReload.Location = new Point(377, 309);
+            buttonReload.Name = "buttonReload";
+            buttonReload.Size = new Size(75, 23);
+            buttonReload.TabIndex = 3;
+            buttonReload.Text = "Reload";
+            buttonReload.UseVisualStyleBackColor = true;
+            buttonReload.Click += ButtonReload_Click;
+            // 
+            // textBoxNameMute
+            // 
+            textBoxNameMute.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            textBoxNameMute.BorderStyle = BorderStyle.FixedSingle;
+            textBoxNameMute.Location = new Point(12, 356);
+            textBoxNameMute.Multiline = true;
+            textBoxNameMute.Name = "textBoxNameMute";
+            textBoxNameMute.ScrollBars = ScrollBars.Vertical;
+            textBoxNameMute.Size = new Size(170, 73);
+            textBoxNameMute.TabIndex = 4;
+            // 
+            // labelKeywords
+            // 
+            labelKeywords.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            labelKeywords.AutoSize = true;
+            labelKeywords.Location = new Point(12, 338);
+            labelKeywords.Name = "labelKeywords";
+            labelKeywords.Size = new Size(160, 15);
+            labelKeywords.TabIndex = 7;
+            labelKeywords.Text = "Mute words for Bitchat name";
+            // 
+            // textBoxChatMute
+            // 
+            textBoxChatMute.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            textBoxChatMute.BorderStyle = BorderStyle.FixedSingle;
+            textBoxChatMute.Location = new Point(188, 356);
+            textBoxChatMute.Multiline = true;
+            textBoxChatMute.Name = "textBoxChatMute";
+            textBoxChatMute.ScrollBars = ScrollBars.Vertical;
+            textBoxChatMute.Size = new Size(170, 73);
+            textBoxChatMute.TabIndex = 5;
+            textBoxChatMute.TextChanged += textBox1_TextChanged;
+            // 
+            // label1
+            // 
+            label1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            label1.AutoSize = true;
+            label1.Location = new Point(188, 338);
+            label1.Name = "label1";
+            label1.Size = new Size(137, 15);
+            label1.TabIndex = 7;
+            label1.Text = "Mute words for chat text";
+            // 
             // FormManiacs
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
             ClientSize = new Size(464, 441);
+            Controls.Add(label1);
+            Controls.Add(labelKeywords);
+            Controls.Add(textBoxChatMute);
+            Controls.Add(textBoxNameMute);
             Controls.Add(buttonReload);
             Controls.Add(buttonDelete);
             Controls.Add(buttonSave);
@@ -191,6 +242,7 @@
             KeyDown += FormManiacs_KeyDown;
             ((System.ComponentModel.ISupportInitialize)dataGridViewUsers).EndInit();
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
@@ -208,5 +260,9 @@
         private DataGridViewTextBoxColumn nip05;
         private DataGridViewTextBoxColumn picture;
         private DataGridViewTextBoxColumn created_at;
+        private TextBox textBoxNameMute;
+        private Label labelKeywords;
+        private TextBox textBoxChatMute;
+        private Label label1;
     }
 }

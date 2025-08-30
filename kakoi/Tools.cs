@@ -59,6 +59,8 @@ namespace omochat
         private static readonly string _usersJsonPath = Path.Combine(Application.StartupPath, "users.json");
         private static readonly string _relaysJsonPath = Path.Combine(Application.StartupPath, "relays.json");
         private static readonly string _clientsJsonPath = Path.Combine(Application.StartupPath, "clients.json");
+        private static readonly string _namemuteJsonPath = Path.Combine(Application.StartupPath, "namemute.json");
+        private static readonly string _chatmuteJsonPath = Path.Combine(Application.StartupPath, "chatmute.json");
 
         private static JsonSerializerOptions GetOption()
         {
@@ -210,6 +212,86 @@ namespace omochat
                 }
             }
             return [.. enabledRelays];
+        }
+        #endregion
+
+        #region 名前ミュート
+        internal static void SaveNameMute(List<string> namemute)
+        {
+            // relays.jsonに保存
+            try
+            {
+                var jsonContent = JsonSerializer.Serialize(namemute, GetOption());
+                File.WriteAllText(_namemuteJsonPath, jsonContent);
+            }
+            catch (JsonException e)
+            {
+                Debug.WriteLine(e.Message);
+            }
+        }
+
+        internal static List<string> LoadNameMute()
+        {
+            // relays.jsonを読み込み
+            if (!File.Exists(_namemuteJsonPath))
+            {
+                return [];
+            }
+            try
+            {
+                var jsonContent = File.ReadAllText(_namemuteJsonPath);
+                var namemute = JsonSerializer.Deserialize<List<string>>(jsonContent, GetOption());
+                if (namemute != null)
+                {
+                    return namemute;
+                }
+                return [];
+            }
+            catch (JsonException e)
+            {
+                Debug.WriteLine(e.Message);
+                return [];
+            }
+        }
+        #endregion
+
+        #region チャットミュート
+        internal static void SaveChatMute(List<string> chatmute)
+        {
+            // relays.jsonに保存
+            try
+            {
+                var jsonContent = JsonSerializer.Serialize(chatmute, GetOption());
+                File.WriteAllText(_chatmuteJsonPath, jsonContent);
+            }
+            catch (JsonException e)
+            {
+                Debug.WriteLine(e.Message);
+            }
+        }
+
+        internal static List<string> LoadChatMute()
+        {
+            // relays.jsonを読み込み
+            if (!File.Exists(_chatmuteJsonPath))
+            {
+                return [];
+            }
+            try
+            {
+                var jsonContent = File.ReadAllText(_chatmuteJsonPath);
+                var chatmute = JsonSerializer.Deserialize<List<string>>(jsonContent, GetOption());
+                if (chatmute != null)
+                {
+                    return chatmute;
+                }
+                return [];
+            }
+            catch (JsonException e)
+            {
+                Debug.WriteLine(e.Message);
+                return [];
+            }
         }
         #endregion
 

@@ -51,9 +51,6 @@ namespace omochat
         private bool _addClient = true;
         private bool _sendDSSTP = false;
 
-
-
-
         private double _tempOpacity = 1.00;
 
         private static readonly DSSTPSender _ds = new("SakuraUnicode");
@@ -72,6 +69,9 @@ namespace omochat
         private readonly LinkedList<string> _displayedEventIds = new();
 
         private List<Client> _clients = [];
+
+        internal List<string> NameMute = [];
+        internal List<string> ChatMute = [];
 
         private readonly ImeStatus _imeStatus = new();
         private bool _reallyClose = false;
@@ -124,6 +124,8 @@ namespace omochat
             Setting.Load(_configPath);
             Users = Tools.LoadUsers();
             _clients = Tools.LoadClients();
+            NameMute = Tools.LoadNameMute();
+            ChatMute = Tools.LoadChatMute();
 
             Location = Setting.Location;
             if (new Point(0, 0) == Location || Location.X < 0 || Location.Y < 0)
@@ -318,6 +320,12 @@ namespace omochat
                     var content = nostrEvent.Content;
                     if (content != null)
                     {
+                        // ChatMuteに含まれている文字列がcontentに含まれている時は表示しない
+                        if (ChatMute.Any(mute => content.Contains(mute, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            continue;
+                        }
+
                         string nickname = string.Empty;
                         User? user = null;
 
@@ -351,17 +359,19 @@ namespace omochat
                                 continue;
                             }
 
-                            // プロフィール購読
-                            await NostrAccess.SubscribeProfilesAsync([nostrEvent.PublicKey]);
-
-                            // ユーザー取得
-                            user = await GetUserAsync(nostrEvent.PublicKey);
-
                             // ユーザー表示名取得
                             var n = nostrEvent.GetTaggedData("n");
                             if (n != null && 0 < n.Length)
                             {
                                 nickname = n[0];
+
+                                // NameMuteに含まれている文字列がnicknameに含まれている時は表示しない
+                                if (NameMute.Any(mute => nickname.Contains(mute, StringComparison.OrdinalIgnoreCase)))
+                                {
+                                    continue;
+                                }
+
+                                // ユーザー取得
                                 if (user != null)
                                 {
                                     user.Nickname = nickname;
@@ -386,6 +396,12 @@ namespace omochat
                             {
                                 nickname = GetUserName(nostrEvent.PublicKey);
                             }
+
+                            // プロフィール購読
+                            await NostrAccess.SubscribeProfilesAsync([nostrEvent.PublicKey]);
+
+                            // ユーザー取得
+                            user = await GetUserAsync(nostrEvent.PublicKey);
 
                             bool isReply = false;
                             var e = nostrEvent.GetTaggedData("e");
