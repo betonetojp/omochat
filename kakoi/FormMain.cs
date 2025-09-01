@@ -1312,7 +1312,7 @@ namespace omochat
                     //var url = $"https://translate.google.com/?sl=auto&tl={systemLang}&text=" + Uri.EscapeDataString(note) + "&op=translate";
                     var url = $"https://translate.google.com/m?sl=auto&tl={systemLang}&q=" + Uri.EscapeDataString(note);
 
-                    // FormWebで開く
+                    // FormWebで開いて読み込み後に不要要素を非表示にする
                     if (_formWeb == null || _formWeb.IsDisposed)
                     {
                         _formWeb = new FormWeb
@@ -1336,7 +1336,8 @@ namespace omochat
 
                     try
                     {
-                        _formWeb.webView2.Source = new Uri(url);
+                        // 非同期でナビゲート＋簡素化（fire-and-forget）
+                        _ = _formWeb.NavigateAndSimplifyAsync(url);
                     }
                     catch (Exception ex)
                     {
