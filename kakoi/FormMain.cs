@@ -397,6 +397,9 @@ namespace omochat
                                 nickname = GetUserName(nostrEvent.PublicKey);
                             }
 
+                            // tタグ
+                            var t = nostrEvent.GetTaggedData("t");
+
                             // プロフィール購読
                             await NostrAccess.SubscribeProfilesAsync([nostrEvent.PublicKey]);
 
@@ -446,6 +449,14 @@ namespace omochat
 
                                 if (dataGridViewNotes.Rows.Count > 0)
                                 {
+                                    if (g[0] != _geohash)
+                                    {
+                                        foreach (DataGridViewCell cell in dataGridViewNotes.Rows[0].Cells)
+                                        {
+                                            cell.Style.ForeColor = Color.Gray;
+                                        }
+                                    }
+
                                     // リプライの時は背景色変更
                                     if (isReply)
                                     {
@@ -476,6 +487,14 @@ namespace omochat
 
                                 if (dataGridViewNotes.Rows.Count > 0)
                                 {
+                                    if (g[0] != _geohash)
+                                    {
+                                        foreach (DataGridViewCell cell in dataGridViewNotes.Rows[^1].Cells)
+                                        {
+                                            cell.Style.ForeColor = Color.Gray;
+                                        }
+                                    }
+
                                     // リプライの時は背景色変更
                                     if (isReply)
                                     {
@@ -514,6 +533,9 @@ namespace omochat
                                     { "Reference5", user?.Picture ?? string.Empty }, // picture
                                     { "Reference6", nevent }, // nevent1...
                                     { "Reference7", nostrEvent.PublicKey.ConvertToNpub() }, // npub1...
+                                    { "Reference8", g[0] }, // g
+                                    { "Reference9", n != null && n.Length > 0 && n[0] != null ? n[0] : "" }, // n
+                                    { "Reference10", t != null && t.Length > 0 && t[0] != null ? t[0] : "" }, // t
                                     { "Script", $"{speaker}{nickname}\\n{editedContent}\\e" }
                                 };
                                 string sstpmsg = _SSTPMethod + "\r\n" + string.Join("\r\n", SSTPHeader.Select(kvp => kvp.Key + ": " + kvp.Value.Replace("\n", "\\n"))) + "\r\n\r\n";

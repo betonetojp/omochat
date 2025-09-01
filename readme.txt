@@ -51,6 +51,12 @@ https://github.com/nikolat/nostalk
 
 ◆ 更新履歴
 
+2025/09/01 v0.1.2
+World view表示時に所属Geohash以外の投稿をグレーで表示するように変更
+伺かOnNostrイベントNostr/0.5対応の準備
+※現在Reference0はNostr/0.4のままReference8,9,10にg,n,tタグを追加送信しています。（タグ未定義時は空文字）
+利用パッケージのアップデート
+
 2025/08/30 v0.1.1
 名前ミュート機能を追加
 チャット本文ミュート機能を追加

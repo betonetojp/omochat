@@ -1,5 +1,4 @@
-﻿using omochat.Properties;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace omochat
 {

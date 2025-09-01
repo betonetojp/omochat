@@ -1,8 +1,7 @@
 ﻿using NBitcoin.Secp256k1;
+using NNostr.Client.Protocols;
 using omochat.Properties;
 using System.Diagnostics;
-using NNostr.Client;
-using NNostr.Client.Protocols;
 
 namespace omochat
 {
