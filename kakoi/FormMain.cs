@@ -1309,7 +1309,8 @@ namespace omochat
                 {
                     var note = (string)dataGridViewNotes.Rows[dataGridViewNotes.SelectedRows[0].Index].Cells["note"].Value;
                     var systemLang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-                    var url = $"https://translate.google.com/?sl=auto&tl={systemLang}&text=" + Uri.EscapeDataString(note) + "&op=translate";
+                    //var url = $"https://translate.google.com/?sl=auto&tl={systemLang}&text=" + Uri.EscapeDataString(note) + "&op=translate";
+                    var url = $"https://translate.google.com/m?sl=auto&tl={systemLang}&q=" + Uri.EscapeDataString(note);
 
                     // FormWebで開く
                     if (_formWeb == null || _formWeb.IsDisposed)
