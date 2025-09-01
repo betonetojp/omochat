@@ -5,6 +5,9 @@ namespace omochat
     public partial class FormWeb : Form
     {
         private bool _simplifyScriptRegistered;
+        private bool _webMessageHooked;
+
+        private const string SimplifiedMessage = "simplified";
 
         public FormWeb()
         {
@@ -13,10 +16,7 @@ namespace omochat
 
         private void FormWeb_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (Owner == null)
-            {
-                return;
-            }
+            if (Owner == null) return;
 
             var mainForm = (FormMain)Owner;
             if (FormWindowState.Normal != WindowState)
@@ -32,7 +32,7 @@ namespace omochat
         }
 
         /// <summary>
-        /// 指定 URL を読み込んで翻訳結果 (.result-container) 以外を非表示にする。
+        /// 指定URLを読み込み 翻訳結果(.result-container)のみ表示。処理完了まで元画面を一切見せない。
         /// </summary>
         public async Task NavigateAndSimplifyAsync(string url)
         {
@@ -43,80 +43,124 @@ namespace omochat
                     await webView2.EnsureCoreWebView2Async();
                 }
 
-                // CoreWebView2 が null の場合は処理しない
-                if (webView2.CoreWebView2 == null)
+                var core = webView2.CoreWebView2;
+
+                // WebMessage hook (一度だけ)
+                if (!_webMessageHooked)
                 {
-                    Debug.WriteLine("CoreWebView2 is still null after initialization.");
-                    return;
+                    core.WebMessageReceived += (s, e) =>
+                    {
+                        try
+                        {
+                            if (e.TryGetWebMessageAsString() == SimplifiedMessage)
+                            {
+                                // 準備できたら表示
+                                if (!webView2.Visible)
+                                {
+                                    webView2.Visible = true;
+                                }
+                            }
+                        }
+                        catch { }
+                    };
+                    _webMessageHooked = true;
                 }
 
-                // スクリプト（1度だけ登録）
+                // 初期スクリプト（早期に全体非表示）と本体スクリプト（結果整形）を一度だけ登録
                 if (!_simplifyScriptRegistered)
                 {
+                    // 1. 極小スクリプト: 即座に不可視化
+                    await core.AddScriptToExecuteOnDocumentCreatedAsync(@"
+try { document.documentElement.style.visibility='hidden'; } catch(_) {}
+");
+
+                    // 2. 本体
                     var script = @"
-        (() => {
-          const install = () => {
-            // CSS で結果以外を一括非表示
-            const css = `
-              body { margin:12px !important; background:#fff !important;
-                     font: 16px/1.55 -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'Noto Sans JP', sans-serif; }
-              body > * { display:none !important; }
-              body > .result-container {
-                display:block !important;
-                white-space:pre-wrap;
-                word-break:break-word;
-                font-size:1.05rem;
-              }
-            `;
-            if (!document.getElementById('__only_result_style__')) {
-              const st = document.createElement('style');
-              st.id = '__only_result_style__';
-              st.textContent = css;
-              document.head ? document.head.appendChild(st) : document.documentElement.appendChild(st);
-            }
+(() => {
+  // Google翻訳モバイル or translate? 判定軽め
+  try {
+    const h = location.hostname;
+    if (!/translate\.google\./.test(h)) {
+      document.documentElement.style.visibility='visible';
+      window.chrome?.webview?.postMessage('" + SimplifiedMessage + @"');
+      return;
+    }
+  } catch {
+    window.chrome?.webview?.postMessage('" + SimplifiedMessage + @"');
+    return;
+  }
 
-            const extract = () => {
-              const r = document.querySelector('.result-container');
-              if (!r) {
-                // 再試行
-                setTimeout(extract, 200);
-                return;
-              }
-              // 不要な子要素が追加された場合のクリーンアップ（念のため）
-              const clean = () => {
-                r.querySelectorAll('form, input, button, a').forEach(e => e.remove());
-              };
-              clean();
-              // 変化監視（再翻訳時にも維持）
-              const mo = new MutationObserver(() => clean());
-              mo.observe(r, { childList:true, subtree:true });
-              window.scrollTo(0, 0);
-            };
-            extract();
-          };
+  const install = () => {
+    try {
+      // CSS 注入: 結果のみ残す
+      const css = `
+        html,body{ background:#fff !important; margin:0 !important; padding:12px !important;
+          font:16px/1.55 -apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,'Noto Sans JP',sans-serif; }
+        body > * { display:none !important; }
+        body > .result-container {
+          display:block !important;
+          white-space:pre-wrap;
+          word-break:break-word;
+          font-size:1.05rem;
+        }
+      `;
+      if(!document.getElementById('__only_result_style__')){
+        const st = document.createElement('style');
+        st.id='__only_result_style__';
+        st.textContent = css;
+        (document.head||document.documentElement).appendChild(st);
+      }
 
-          // Google 翻訳ページ以外は何もしない軽い判定（必要に応じて調整）
-          try {
-            const h = location.hostname;
-            if (!/translate\.google\./.test(h)) return;
-          } catch { return; }
+      const expose = () => {
+        // 最後に表示
+        document.documentElement.style.visibility='visible';
+        window.chrome?.webview?.postMessage('" + SimplifiedMessage + @"');
+      };
 
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', install, { once:true });
-          } else {
-            install();
-          }
-        })();
-        ";
-                    await webView2.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(script);
+      const waitResult = () => {
+        const r = document.querySelector('.result-container');
+        if (!r) { setTimeout(waitResult, 120); return; }
+
+        // 不要な子要素のクリーニング（再翻訳で挿入されても維持）
+        const clean = () => {
+          r.querySelectorAll('form, input, button, a').forEach(e => e.remove());
+        };
+        clean();
+        const mo = new MutationObserver(() => clean());
+        mo.observe(r, { childList:true, subtree:true });
+
+        window.scrollTo(0,0);
+        expose();
+      };
+      waitResult();
+    } catch {
+      // 失敗しても露出だけはする
+      try { document.documentElement.style.visibility='visible'; } catch{}
+      window.chrome?.webview?.postMessage('" + SimplifiedMessage + @"');
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', install, { once:true });
+  } else {
+    install();
+  }
+})();
+";
+                    await core.AddScriptToExecuteOnDocumentCreatedAsync(script);
                     _simplifyScriptRegistered = true;
                 }
 
-                webView2.CoreWebView2.Navigate(url);
+                // 再ナビゲート前に不可視化
+                webView2.Visible = false;
+
+                core.Navigate(url);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex);
+                // エラー時は表示を戻しておく
+                if (!webView2.Visible) webView2.Visible = true;
             }
         }
     }
