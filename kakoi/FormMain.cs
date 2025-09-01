@@ -4,6 +4,7 @@ using omochat.Properties;
 using SSTPLib;
 using System.Configuration;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
 
 namespace omochat
@@ -1299,6 +1300,49 @@ namespace omochat
                     var mev = new MouseEventArgs(MouseButtons.Right, 1, 0, 0, 0);
                     var ev = new DataGridViewCellMouseEventArgs(0, dataGridViewNotes.SelectedRows[0].Index, 0, 0, mev);
                     DataGridViewNotes_CellMouseClick(sender, ev);
+                }
+            }
+            // GキーでGoogle翻訳
+            if (e.KeyCode == Keys.G)
+            {
+                if (dataGridViewNotes.SelectedRows.Count > 0 && dataGridViewNotes.SelectedRows[0].Index >= 0)
+                {
+                    var note = (string)dataGridViewNotes.Rows[dataGridViewNotes.SelectedRows[0].Index].Cells["note"].Value;
+                    var systemLang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+                    var url = $"https://translate.google.com/?sl=auto&tl={systemLang}&text=" + Uri.EscapeDataString(note) + "&op=translate";
+
+                    // FormWebで開く
+                    if (_formWeb == null || _formWeb.IsDisposed)
+                    {
+                        _formWeb = new FormWeb
+                        {
+                            Location = _formWebLocation,
+                            Size = _formWebSize
+                        };
+                    }
+                    if (!_formWeb.Visible)
+                    {
+                        _formWeb.Location = _formWebLocation;
+                        _formWeb.Size = _formWebSize;
+                        _formWeb.Show(this);
+                    }
+                    if (_formWeb.WindowState == FormWindowState.Minimized)
+                    {
+                        _formWeb.WindowState = FormWindowState.Normal;
+                    }
+                    Setting.WebViewLocation = _formWeb.Location;
+                    Setting.WebViewSize = _formWeb.Size;
+
+                    try
+                    {
+                        _formWeb.webView2.Source = new Uri(url);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex.Message);
+                        _formWeb.Close();
+                    }
+                    Focus();
                 }
             }
             // Rキーで返信
