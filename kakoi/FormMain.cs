@@ -1302,8 +1302,8 @@ namespace omochat
                     DataGridViewNotes_CellMouseClick(sender, ev);
                 }
             }
-            // GキーでGoogle翻訳
-            if (e.KeyCode == Keys.G)
+            // DキーでGoogle翻訳
+            if (e.KeyCode == Keys.D)
             {
                 if (dataGridViewNotes.SelectedRows.Count > 0 && dataGridViewNotes.SelectedRows[0].Index >= 0)
                 {
