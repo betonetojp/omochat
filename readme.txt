@@ -27,6 +27,7 @@ Windows11 22H2 (x64)
   S / [↓] ：イベント選択下移動
   Shift + S：イベント最下行へ移動
   A / [←] ：Webビューを開く（イベントを右クリックでも動作）
+  D：翻訳（Google翻訳WebページをWebビューで開く）
   C：Webビューを閉じる
 
   F：mention（ポストバーに選択ユーザーの名前を入力）
@@ -45,11 +46,14 @@ GhostSpeakerと棒読みちゃんを組み合わせて読み上げさせるの�
 https://github.com/apxxxxxxe/GhostSpeaker
 https://chi.usamimi.info/Program/Application/BouyomiChan/
 
-「伺か」(SSP)用ゴースト「nostalk」のNostrイベント通知(Nostr/0.4)に対応しアバター画像を送信できます。
+「伺か」(SSP)用ゴースト「nostalk」のNostrイベント通知(Nostr/0.5)に対応しアバター画像やBitchat情報を送信できます。
 https://github.com/nikolat/nostalk
 
 
 ◆ 更新履歴
+2025/09/02 v0.1.3
+Dキーで投稿内容のGoogle翻訳をWebビューで開く機能を追加
+伺かOnNostrイベントNostr/0.5対応
 
 2025/09/01 v0.1.2
 World view表示時に所属Geohash以外の投稿をグレーで表示するように変更

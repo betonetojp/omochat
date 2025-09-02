@@ -62,7 +62,7 @@ namespace omochat
             {"Sender","omochat"},
             {"Option","nobreak,notranslate"},
             {"Event","OnNostr"},
-            {"Reference0","Nostr/0.4"}
+            {"Reference0","Nostr/0.5"}
         };
 
         private string _ghostName = string.Empty;
