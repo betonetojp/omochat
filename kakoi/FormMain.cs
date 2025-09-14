@@ -43,7 +43,8 @@ namespace omochat
         internal Dictionary<string, User?> Users = [];
 
         private bool _minimizeToTray;
-        private bool _worldView = false;
+        private bool _worldView = true;
+        private bool _showGeohash = true;
         private string _geohash = string.Empty;
         private bool _addTeleport;
         private string _nickname = string.Empty;
@@ -144,6 +145,7 @@ namespace omochat
             _formPostBar.Opacity = Opacity;
             _minimizeToTray = Setting.MinimizeToTray;
             _worldView = Setting.WorldView;
+            _showGeohash = Setting.ShowGeohash;
             _geohash = Setting.Geohash;
             _addTeleport = Setting.AddTeleport;
             _nickname = Setting.Nickname;
@@ -782,6 +784,7 @@ namespace omochat
             _formSetting.trackBarOpacity.Value = (int)(Opacity * 100);
             _formSetting.checkBoxMinimizeToTray.Checked = _minimizeToTray;
             _formSetting.checkBoxWorldView.Checked = _worldView;
+            _formSetting.checkBoxShowGeohash.Checked = _showGeohash;
             _formSetting.textBoxGeohash.Text = _geohash;
             _formSetting.checkBoxAddTeleport.Checked = _addTeleport;
             _formSetting.textBoxNickname.Text = _nickname;
@@ -802,7 +805,9 @@ namespace omochat
             _formPostBar.Opacity = Opacity;
             _minimizeToTray = _formSetting.checkBoxMinimizeToTray.Checked;
             _worldView = _formSetting.checkBoxWorldView.Checked;
+            _showGeohash = _formSetting.checkBoxShowGeohash.Checked;
             _geohash = _formSetting.textBoxGeohash.Text;
+            dataGridViewNotes.Columns["geohash"].Visible = _showGeohash;
             _addTeleport = _formSetting.checkBoxAddTeleport.Checked;
             _nickname = _formSetting.textBoxNickname.Text;
             if (string.IsNullOrEmpty(_nickname))
@@ -875,6 +880,7 @@ namespace omochat
             Setting.Opacity = Opacity;
             Setting.MinimizeToTray = _minimizeToTray;
             Setting.WorldView = _worldView;
+            Setting.ShowGeohash = _showGeohash;
             Setting.Geohash = _geohash;
             Setting.AddTeleport = _addTeleport;
             Setting.Nickname = _nickname;
@@ -1065,6 +1071,7 @@ namespace omochat
                     Setting.WebViewSize = _formWeb.Size;
                 }
                 Setting.NameColumnWidth = dataGridViewNotes.Columns["name"].Width;
+                Setting.ShowGeohash = _showGeohash;
                 Setting.Save(_configPath);
                 Tools.SaveUsers(Users);
 
@@ -1094,7 +1101,7 @@ namespace omochat
                     _formSetting.textBoxNsec.Enabled = false;
                 }
 
-                dataGridViewNotes.Columns["geohash"].Visible = false;
+                dataGridViewNotes.Columns["geohash"].Visible = _showGeohash;
                 dataGridViewNotes.Columns["hash"].Visible = false;
 
                 ButtonStart_Click(sender, e);
@@ -1150,9 +1157,9 @@ namespace omochat
             // F5キーでgeohash列の表示切替
             if (e.KeyCode == Keys.F5)
             {
-                dataGridViewNotes.Columns["geohash"].Visible = !dataGridViewNotes.Columns["geohash"].Visible;
+                _showGeohash = !dataGridViewNotes.Columns["geohash"].Visible;
+                dataGridViewNotes.Columns["geohash"].Visible = _showGeohash;
             }
-
             if (e.KeyCode == Keys.Escape)
             {
                 ButtonSetting_Click(sender, e);

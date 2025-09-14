@@ -22,7 +22,8 @@ namespace omochat
             public bool TopMost { get; set; } = false;
             public double Opacity { get; set; } = 1.00;
             public bool MinimizeToTray { get; set; } = false;
-            public bool WorldView { get; set; } = false;
+            public bool WorldView { get; set; } = true;
+            public bool ShowGeohash { get; set; } = true;
             public string Geohash { get; set; } = "xn";
             public bool AddTeleport { get; set; } = true;
             public string Nickname { get; set; } = "";
@@ -83,6 +84,11 @@ namespace omochat
         {
             get => _data.WorldView;
             set => _data.WorldView = value;
+        }
+        public static bool ShowGeohash
+        {
+            get => _data.ShowGeohash;
+            set => _data.ShowGeohash = value;
         }
         public static string Geohash
         {

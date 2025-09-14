@@ -55,6 +55,7 @@
             checkBoxDescendingOrder = new CheckBox();
             checkBoxAutoScroll = new CheckBox();
             checkBoxWorldView = new CheckBox();
+            checkBoxShowGeohash = new CheckBox();
             ((System.ComponentModel.ISupportInitialize)trackBarOpacity).BeginInit();
             SuspendLayout();
             // 
@@ -69,7 +70,7 @@
             textBoxNsec.PasswordChar = '*';
             textBoxNsec.PlaceholderText = "nsec1...";
             textBoxNsec.Size = new Size(221, 23);
-            textBoxNsec.TabIndex = 9;
+            textBoxNsec.TabIndex = 10;
             textBoxNsec.Leave += TextBoxNsec_Leave;
             // 
             // trackBarOpacity
@@ -112,7 +113,7 @@
             checkBoxAddClient.Location = new Point(12, 270);
             checkBoxAddClient.Name = "checkBoxAddClient";
             checkBoxAddClient.Size = new Size(100, 19);
-            checkBoxAddClient.TabIndex = 14;
+            checkBoxAddClient.TabIndex = 15;
             checkBoxAddClient.Text = "Add client tag";
             checkBoxAddClient.UseVisualStyleBackColor = true;
             // 
@@ -134,7 +135,7 @@
             linkLabelIcons8.Location = new Point(271, 297);
             linkLabelIcons8.Name = "linkLabelIcons8";
             linkLabelIcons8.Size = new Size(41, 15);
-            linkLabelIcons8.TabIndex = 17;
+            linkLabelIcons8.TabIndex = 18;
             linkLabelIcons8.TabStop = true;
             linkLabelIcons8.Text = "Icons8";
             linkLabelIcons8.LinkClicked += LinkLabelIcons8_LinkClicked;
@@ -164,7 +165,7 @@
             checkBoxSendDSSTP.Location = new Point(118, 270);
             checkBoxSendDSSTP.Name = "checkBoxSendDSSTP";
             checkBoxSendDSSTP.Size = new Size(88, 19);
-            checkBoxSendDSSTP.TabIndex = 15;
+            checkBoxSendDSSTP.TabIndex = 16;
             checkBoxSendDSSTP.Text = "Send DSSTP";
             checkBoxSendDSSTP.UseVisualStyleBackColor = true;
             // 
@@ -175,7 +176,7 @@
             linkLabelVersion.Location = new Point(12, 297);
             linkLabelVersion.Name = "linkLabelVersion";
             linkLabelVersion.Size = new Size(37, 15);
-            linkLabelVersion.TabIndex = 16;
+            linkLabelVersion.TabIndex = 17;
             linkLabelVersion.TabStop = true;
             linkLabelVersion.Text = "v0.1.3";
             linkLabelVersion.LinkClicked += LinkLabelVersion_LinkClicked;
@@ -208,7 +209,7 @@
             textBoxNpub.PlaceholderText = "npub1...";
             textBoxNpub.ReadOnly = true;
             textBoxNpub.Size = new Size(250, 23);
-            textBoxNpub.TabIndex = 11;
+            textBoxNpub.TabIndex = 12;
             // 
             // buttonLogOut
             // 
@@ -217,7 +218,7 @@
             buttonLogOut.Location = new Point(309, 187);
             buttonLogOut.Name = "buttonLogOut";
             buttonLogOut.Size = new Size(23, 23);
-            buttonLogOut.TabIndex = 10;
+            buttonLogOut.TabIndex = 11;
             toolTipLogOut.SetToolTip(buttonLogOut, "Log out");
             buttonLogOut.UseVisualStyleBackColor = true;
             buttonLogOut.Click += ButtonLogOut_Click;
@@ -228,7 +229,7 @@
             textBoxGeohash.Location = new Point(82, 100);
             textBoxGeohash.Name = "textBoxGeohash";
             textBoxGeohash.Size = new Size(84, 23);
-            textBoxGeohash.TabIndex = 5;
+            textBoxGeohash.TabIndex = 6;
             // 
             // textBoxNickname
             // 
@@ -236,7 +237,7 @@
             textBoxNickname.Location = new Point(82, 129);
             textBoxNickname.Name = "textBoxNickname";
             textBoxNickname.Size = new Size(84, 23);
-            textBoxNickname.TabIndex = 7;
+            textBoxNickname.TabIndex = 8;
             // 
             // label5
             // 
@@ -265,7 +266,7 @@
             checkBoxAddTeleport.Location = new Point(172, 101);
             checkBoxAddTeleport.Name = "checkBoxAddTeleport";
             checkBoxAddTeleport.Size = new Size(112, 19);
-            checkBoxAddTeleport.TabIndex = 6;
+            checkBoxAddTeleport.TabIndex = 7;
             checkBoxAddTeleport.Text = "Add teleport tag";
             checkBoxAddTeleport.UseVisualStyleBackColor = true;
             // 
@@ -275,7 +276,7 @@
             buttonCreate.Location = new Point(82, 158);
             buttonCreate.Name = "buttonCreate";
             buttonCreate.Size = new Size(100, 27);
-            buttonCreate.TabIndex = 8;
+            buttonCreate.TabIndex = 9;
             buttonCreate.Text = "Create new key";
             buttonCreate.UseVisualStyleBackColor = true;
             buttonCreate.Click += buttonCreate_Click;
@@ -287,7 +288,7 @@
             checkBoxDescendingOrder.Location = new Point(140, 245);
             checkBoxDescendingOrder.Name = "checkBoxDescendingOrder";
             checkBoxDescendingOrder.Size = new Size(119, 19);
-            checkBoxDescendingOrder.TabIndex = 13;
+            checkBoxDescendingOrder.TabIndex = 14;
             checkBoxDescendingOrder.Text = "Descending order";
             checkBoxDescendingOrder.UseVisualStyleBackColor = true;
             // 
@@ -300,13 +301,15 @@
             checkBoxAutoScroll.Location = new Point(12, 245);
             checkBoxAutoScroll.Name = "checkBoxAutoScroll";
             checkBoxAutoScroll.Size = new Size(120, 19);
-            checkBoxAutoScroll.TabIndex = 12;
+            checkBoxAutoScroll.TabIndex = 13;
             checkBoxAutoScroll.Text = "Scroll to new post";
             checkBoxAutoScroll.UseVisualStyleBackColor = true;
             // 
             // checkBoxWorldView
             // 
             checkBoxWorldView.AutoSize = true;
+            checkBoxWorldView.Checked = true;
+            checkBoxWorldView.CheckState = CheckState.Checked;
             checkBoxWorldView.ForeColor = SystemColors.ControlText;
             checkBoxWorldView.Location = new Point(12, 75);
             checkBoxWorldView.Name = "checkBoxWorldView";
@@ -314,6 +317,19 @@
             checkBoxWorldView.TabIndex = 4;
             checkBoxWorldView.Text = "World view";
             checkBoxWorldView.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxShowGeohash
+            // 
+            checkBoxShowGeohash.AutoSize = true;
+            checkBoxShowGeohash.Checked = true;
+            checkBoxShowGeohash.CheckState = CheckState.Checked;
+            checkBoxShowGeohash.ForeColor = SystemColors.ControlText;
+            checkBoxShowGeohash.Location = new Point(103, 75);
+            checkBoxShowGeohash.Name = "checkBoxShowGeohash";
+            checkBoxShowGeohash.Size = new Size(104, 19);
+            checkBoxShowGeohash.TabIndex = 5;
+            checkBoxShowGeohash.Text = "Show Geohash";
+            checkBoxShowGeohash.UseVisualStyleBackColor = true;
             // 
             // FormSetting
             // 
@@ -330,6 +346,7 @@
             Controls.Add(linkLabelVersion);
             Controls.Add(checkBoxDescendingOrder);
             Controls.Add(checkBoxAutoScroll);
+            Controls.Add(checkBoxShowGeohash);
             Controls.Add(checkBoxWorldView);
             Controls.Add(checkBoxSendDSSTP);
             Controls.Add(label6);
@@ -389,5 +406,6 @@
         internal CheckBox checkBoxDescendingOrder;
         internal CheckBox checkBoxAutoScroll;
         internal CheckBox checkBoxWorldView;
+        internal CheckBox checkBoxShowGeohash;
     }
 }

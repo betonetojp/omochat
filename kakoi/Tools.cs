@@ -168,10 +168,13 @@ namespace omochat
         internal static List<Relay> LoadRelays()
         {
             List<Relay> defaultRelays = [
+                new Relay { Enabled = true, Url = "wss://relay.damus.io/" },
+                new Relay { Enabled = true, Url = "wss://nos.lol/" },
+                new Relay { Enabled = true, Url = "wss://relay.primal.net/" },
+                new Relay { Enabled = true, Url = "wss://offchain.pub/" },
+                new Relay { Enabled = true, Url = "wss://nostr21.com/" },
                 new Relay { Enabled = true, Url = "wss://yabu.me/" },
                 new Relay { Enabled = true, Url = "wss://nostr.now/" },
-                new Relay { Enabled = false, Url = "wss://relay.damus.io/" },
-                new Relay { Enabled = false, Url = "wss://nos.lol/" },
                 ];
 
             // relays.jsonを読み込み
