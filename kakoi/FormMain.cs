@@ -806,8 +806,26 @@ namespace omochat
             _minimizeToTray = _formSetting.checkBoxMinimizeToTray.Checked;
             _worldView = _formSetting.checkBoxWorldView.Checked;
             _showGeohash = _formSetting.checkBoxShowGeohash.Checked;
-            _geohash = _formSetting.textBoxGeohash.Text;
             dataGridViewNotes.Columns["geohash"].Visible = _showGeohash;
+            _geohash = _formSetting.textBoxGeohash.Text;
+            // 既存の行の文字色を変更（_geohashに該当する行は黒に、他は灰色に）
+            foreach (DataGridViewRow row in dataGridViewNotes.Rows)
+            {
+                if (row.Cells["geohash"].Value != null && row.Cells["geohash"].Value.ToString() == _geohash)
+                {
+                    foreach (DataGridViewCell cell in row.Cells)
+                    {
+                        cell.Style.ForeColor = Color.Black;
+                    }
+                }
+                else
+                {
+                    foreach (DataGridViewCell cell in row.Cells)
+                    {
+                        cell.Style.ForeColor = Color.Gray;
+                    }
+                }
+            }
             _addTeleport = _formSetting.checkBoxAddTeleport.Checked;
             _nickname = _formSetting.textBoxNickname.Text;
             if (string.IsNullOrEmpty(_nickname))
@@ -1072,6 +1090,7 @@ namespace omochat
                 }
                 Setting.NameColumnWidth = dataGridViewNotes.Columns["name"].Width;
                 Setting.ShowGeohash = _showGeohash;
+                Setting.Geohash = _geohash;
                 Setting.Save(_configPath);
                 Tools.SaveUsers(Users);
 
@@ -1409,7 +1428,42 @@ namespace omochat
                     _formPostBar.buttonPost.BackColor = SystemColors.Control;
                 }
             }
-
+            // Xキーで選択行のGeohashを_geohashにセット
+            if (e.KeyCode == Keys.X)
+            {
+                if (dataGridViewNotes.SelectedRows.Count > 0 && dataGridViewNotes.SelectedRows[0].Index >= 0)
+                {
+                    var gh = (string)dataGridViewNotes.Rows[dataGridViewNotes.SelectedRows[0].Index].Cells["geohash"].Value;
+                    // 既存の行の文字色を変更（_geohashに該当する行は黒に、他は灰色に）
+                    foreach (DataGridViewRow row in dataGridViewNotes.Rows)
+                    {
+                        if ((string)row.Cells["geohash"].Value == gh)
+                        {
+                            foreach (DataGridViewCell cell in row.Cells)
+                            {
+                                cell.Style.ForeColor = Color.Black;
+                            }
+                        }
+                        else
+                        {
+                            foreach (DataGridViewCell cell in row.Cells)
+                            {
+                                cell.Style.ForeColor = Color.Gray;
+                            }
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(gh))
+                    {
+                        _geohash = gh;
+                        // タイトルバーにニックネームとジオハッシュを表示
+                        if (!string.IsNullOrEmpty(_nickname))
+                        {
+                            Text = $"@{_nickname}  #{_geohash}{(_addTeleport ? "📍" : "")} {(_worldView ? "🌐" : "")}";
+                            notifyIcon.Text = $"omochat - @{_nickname}  #{_geohash}{(_addTeleport ? "📍" : "")} {(_worldView ? "🌐" : "")}";
+                        }
+                    }
+                }
+            }
             // Zキーでnote列の折り返し切り替え
             if (e.KeyCode == Keys.Z)
             {
