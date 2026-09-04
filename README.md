@@ -1,117 +1,81 @@
-﻿# omochat
+# omochat
 
-omochat is a simple Nostr client for viewing and posting to Bitchat.
+Bitchat のタイムラインを覗いたり投稿したりできるシンプルな Nostr クライアントです。  
+タイムラインの投稿を「伺か」(SSP) にリアルタイム送信する SSTP 連携機能も備えています。
 
-## Requirements
+---
 
-- Windows 11 22H2 (x64)
-- .NET 8.0 runtime
-  - The runtime is required. If it is not installed, follow the on-screen instructions shown on first run.
+## 動作環境
+- **OS**: Windows 10 / Windows 11 (x64)
+- **ランタイム**: [.NET 8.0 ランタイム (Desktop Runtime)](https://dotnet.microsoft.com/download/dotnet/8.0)
 
-## Overview
+---
 
-`omochat.exe` lets you peek into Bitchat timelines and post messages. To post, enter your Nostr private key (starts with `nsec1...`) in the Settings screen. You can generate a new Nostr private key by clicking the **Create new key** button in Settings.
+## 主な機能
 
-## Keyboard Shortcuts
+- **Bitchat タイムライン受信**: Bitchat 形式（kind: 20000）のメッセージをリアルタイム受信
+- **インデクサリレー連携**: プロフィール未取得のアカウントもインデクサリレー（`directory.yabu.me`）から非同期に自動取得
+- **投稿機能**: ポストバーから Bitchat へのメッセージ投稿（設定画面で Nostr 秘密鍵 `nsec1...` の登録が必要）
+- **Geohash 表示・フィルタ**: 各投稿の Geohash 表示、選択行の Geohash へのジャンプ（Xキー）、World view（所属外をグレー表示）の切り替え
+- **Web ビュー・Google 翻訳連携**: 投稿を内蔵 Web ビューで開く機能および Google 翻訳によるワンキー翻訳
+- **ミュート機能**: アカウントミュート（pubkey）に加え、名前（NameMute）およびチャット本文（ChatMute）の部分一致ワードミュートに対応
+- **表示順序・自動スクロール**: 昇順表示／降順表示の切り替え、新着投稿への自動スクロール
+- **「伺か」(SSP) 連携**: DirectSSTP による投稿通知（Nostr/0.5仕様、アバター画像やBitchat情報 g, n, t タグ送信対応）
 
-- ESC: Open Settings
-- F1 / F12: Toggle post bar
-- F2: Toggle Time column
-- F3: Toggle Name column
-- F4: Toggle User-hash column (hidden by default)
-- F5: Toggle Geohash column
-- F9 / Z / double-click empty area: Toggle content word wrap
-- F10 / Right-click empty area: Open Mute settings
-- F11: Minimize main window
+---
 
-- Shift + W: Move to top event
-- W / Arrow Up: Move selection up
-- S / Arrow Down: Move selection down
-- Shift + S: Move to bottom event
-- A / Arrow Left: Open web view (also via right-click on event)
-- D: Translate (opens Google Translate page in web view)
-- C: Close web view
-- X: Jump to selected row's Geohash
+## 操作方法・ショートカット
 
-- F: Mention (inserts selected user's name into the post bar)
-- H: Send "hug"
-- T: Send "slap"
+| キー / 操作 | 動作 |
+|---|---|
+| `ESC` | 設定画面を開く |
+| `F1` / `F12` | ポストバー（投稿欄）の表示 / 非表示を切り替え |
+| `F2` | 時間列（time）の表示 / 非表示を切り替え |
+| `F3` | 名前列（name）の表示 / 非表示を切り替え |
+| `F4` | ユーザーハッシュ列（hash）の表示 / 非表示を切り替え（デフォルト非表示） |
+| `F5` | Geohash 列の表示 / 非表示を切り替え |
+| `F9` / `Z` / 余白ダブルクリック | 本文の折り返し表示の切り替え |
+| `F10` / 余白右クリック | マニアック設定画面（ミュートアカウント一覧、ワードミュート等）を開く |
+| `F11` | メイン画面を最小化 |
+| `Shift` + `W` | 最上行のイベントへ移動 |
+| `W` / `↑` | 選択行を上へ移動 |
+| `S` / `↓` | 選択行を下へ移動 |
+| `Shift` + `S` | 最下行のイベントへ移動 |
+| `A` / `←` / イベント右クリック | 内蔵 Web ビューを開く |
+| `D` | 選択投稿の Google 翻訳ページを Web ビューで開く |
+| `C` | 内蔵 Web ビューを閉じる |
+| `X` | 選択行の Geohash に現在位置を移動 |
+| `F` | メンション（ポストバーに選択ユーザーの `@名前` を挿入） |
+| `H` | hug を送信 |
+| `T` | slap を送信 |
+| `R` | 返信（Nostr の返信形式でポストバーを開く） |
+| `Ctrl` + `Shift` + `Z` | メインフォームをアクティブ化（グローバルホットキー） |
 
-- R: Reply (this is a Nostr reply, not a Bitchat-specific reply)
-- Ctrl + Shift + Z: Activate main form
+---
 
-## SSP (Shiori/SSP) Integration
+## 外部連携
 
-You can stream timeline events to SSP (Shiori/SSP). Recommended tools for speech output: GhostSpeaker + Bouyomi-chan.
+### 「伺か」(SSP) 連携（DirectSSTP）
+タイムラインの投稿を「伺か」(SSP) にリアルタイムで流すことができます。
+- [SSP](https://ssp.shillest.net/) / [keshiki](https://keshiki.nobody.jp/)
+- [GhostSpeaker](https://github.com/apxxxxxxe/GhostSpeaker) と [棒読みちゃん](https://chi.usamimi.info/Program/Application/BouyomiChan/) を組み合わせることで、タイムラインの音声読み上げも可能です。
+- 「伺か」(SSP) 用ゴースト「[nostalk](https://github.com/nikolat/nostalk)」の Nostr イベント通知仕様 (Nostr/0.5) に対応し、アバター画像や Bitchat 情報（`g`, `n`, `t` タグ）をゴースト側に送信できます。
 
-- SSP resources:
-  - https://ssp.shillest.net/
-  - https://keshiki.nobody.jp/
+---
 
-- GhostSpeaker:
-  - https://github.com/apxxxxxxe/GhostSpeaker
-- Bouyomi-chan:
-  - https://chi.usamimi.info/Program/Application/BouyomiChan/
+## 各種設定ファイル
+アプリの実行フォルダ内に以下の設定ファイルが保存されます：
+- `omochat.config`: ウィンドウ位置、カラム表示設定、表示順序、Geohash等の基本設定（XML形式）
+- `relays.json`: 接続先リレー情報
+- `users.json`: プロフィール情報のキャッシュ（表示名、ニックネーム、ミュート設定等）
+- `clients.json`: クライアントタグに応じた時間の背景色マッピング
+- `namemute.json`: 名前ミュートワードリスト
+- `chatmute.json`: 本文ミュートワードリスト
 
-omochat supports sending Nostr event notifications (Nostr/0.5) for the SSP ghost "nostalk", including avatar images and Bitchat info:
-- https://github.com/nikolat/nostalk
+---
 
-## Changelog
-
-- 2025-09-15 — v0.1.4
-  - Added feature: press `X` to jump to selected row's Geohash
-  - Save Geohash column visibility state
-
-- 2025-09-02 — v0.1.3
-  - Added feature: `D` opens Google Translate for the post in web view
-  - Prepared support for SSP OnNostr events (Nostr/0.5)
-
-- 2025-09-01 — v0.1.2
-  - In World view, posts outside the current Geohash are shown in gray
-  - Prepared Nostr/0.5 support for SSP OnNostr events
-    - Note: Reference0 remains Nostr/0.4; Reference8,9,10 now include g, n, t tags (empty if undefined)
-  - Updated NuGet packages
-
-- 2025-08-30 — v0.1.1
-  - Added name mute
-  - Added content mute
-    - Both support partial-match and multiple entries separated by newlines
-
-- 2025-08-30 — v0.1.0
-  - Added mute feature
-  - Default display order changed to ascending (enable "Descending order" in Settings for descending)
-  - Added "Scroll to new post" setting
-  - Added "World view" setting
-  - Updated shortcut keys
-
-- 2025-08-30 — v0.0.2
-  - Title bar shows teleport tag on/off
-  - Added User-hash display column
-  - Added mention, hug, slap features
-  - Added several client colors
-    - Note: If `clients.json` exists it will not be overwritten. Delete it to add new clients.
-
-- 2025-08-29 — v0.0.1
-  - Initial release
-
-## NuGet Packages
-
-- CredentialManagement  
-  https://www.nuget.org/packages/CredentialManagement
-
-## Nostr Client Library
-
-- NNostr  
-  https://github.com/Kukks/NNostr  
-  - A modified portion of `NNostr.Client` v0.0.49 is used.
-
-## DirectSSTP Sending Library
-
-- DirectSSTPTester  
-  https://github.com/nikolat/DirectSSTPTester  
-  - Uses `SSTPLib` v4.0.0 from the project.
-
-## Notes
-
-- This README is a translation and reformatting of the original `readme.txt`.
-- For bugs, issues or contribution details, check the repository and open an issue or pull request.
+## 利用ライブラリ / NuGet パッケージ
+- [CredentialManagement](https://www.nuget.org/packages/CredentialManagement)
+- [Microsoft.Web.WebView2](https://www.nuget.org/packages/Microsoft.Web.WebView2)
+- [NNostr](https://github.com/Kukks/NNostr) (NNostr.Client を一部変更して同梱)
+- [DirectSSTPTester](https://github.com/nikolat/DirectSSTPTester) (SSTPLib を利用)

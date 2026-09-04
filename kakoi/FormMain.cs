@@ -1,4 +1,4 @@
-﻿using NNostr.Client;
+using NNostr.Client;
 using NNostr.Client.Protocols;
 using omochat.Properties;
 using SSTPLib;
@@ -41,6 +41,10 @@ namespace omochat
         /// ユーザー辞書
         /// </summary>
         internal Dictionary<string, User?> Users = [];
+        /// <summary>
+        /// プロフィール取得中の公開鍵セット
+        /// </summary>
+        private readonly HashSet<string> _fetchingProfileHexs = [];
 
         private bool _minimizeToTray;
         private bool _worldView = true;
@@ -106,7 +110,8 @@ namespace omochat
             }
 
             // ボタンの画像をDPIに合わせて表示
-            float scale = CreateGraphics().DpiX / 96f;
+            using var graphics = CreateGraphics();
+            float scale = graphics.DpiX / 96f;
             int size = (int)(16 * scale);
             if (scale < 2.0f)
             {
@@ -196,6 +201,8 @@ namespace omochat
 
                     if (NostrAccess.Clients != null)
                     {
+                        NostrAccess.Clients.EventsReceived -= OnClientOnUsersInfoEventsReceived;
+                        NostrAccess.Clients.EventsReceived -= OnClientOnTimeLineEventsReceived;
                         NostrAccess.Clients.EventsReceived += OnClientOnUsersInfoEventsReceived;
                         NostrAccess.Clients.EventsReceived += OnClientOnTimeLineEventsReceived;
                     }
@@ -274,25 +281,34 @@ namespace omochat
                         var newUserData = Tools.JsonToUser(nostrEvent.Content, nostrEvent.CreatedAt);
                         if (newUserData != null)
                         {
-                            DateTimeOffset? cratedAt = DateTimeOffset.MinValue;
-                            if (Users.TryGetValue(nostrEvent.PublicKey, out User? existingUserData))
+                            string resolvedName = string.Empty;
+                            lock (Users)
                             {
-                                cratedAt = existingUserData?.CreatedAt;
+                                DateTimeOffset? cratedAt = DateTimeOffset.MinValue;
+                                if (Users.TryGetValue(nostrEvent.PublicKey, out User? existingUserData))
+                                {
+                                    cratedAt = existingUserData?.CreatedAt;
+                                    newUserData.Nickname = existingUserData?.Nickname;
+                                    if (false == existingUserData?.Mute)
+                                    {
+                                        // 既にミュートオフのアカウントのミュートを解除
+                                        newUserData.Mute = false;
+                                    }
+                                }
+                                if (cratedAt == null || (cratedAt < newUserData.CreatedAt))
+                                {
+                                    newUserData.LastActivity = DateTime.Now;
+                                    // 辞書に追加（上書き）
+                                    Users[nostrEvent.PublicKey] = newUserData;
+                                    Debug.WriteLine($"cratedAt updated {cratedAt} -> {newUserData.CreatedAt}");
+                                    Debug.WriteLine($"プロフィール更新: {newUserData.DisplayName} @{newUserData.Name}");
+                                }
                             }
-                            if (false == existingUserData?.Mute)
+
+                            resolvedName = GetUserName(nostrEvent.PublicKey);
+                            if (dataGridViewNotes.IsHandleCreated)
                             {
-                                // 既にミュートオフのアカウントのミュートを解除
-                                newUserData.Mute = false;
-                            }
-                            if (cratedAt == null || (cratedAt < newUserData.CreatedAt))
-                            {
-                                newUserData.LastActivity = DateTime.Now;
-                                newUserData.Nickname = existingUserData?.Nickname;
-                                Tools.SaveUsers(Users);
-                                // 辞書に追加（上書き）
-                                Users[nostrEvent.PublicKey] = newUserData;
-                                Debug.WriteLine($"cratedAt updated {cratedAt} -> {newUserData.CreatedAt}");
-                                Debug.WriteLine($"プロフィール更新: {newUserData.DisplayName} @{newUserData.Name}");
+                                dataGridViewNotes.BeginInvoke(new Action(() => UpdateGridProfile(nostrEvent.PublicKey, resolvedName)));
                             }
                         }
                     }
@@ -374,40 +390,45 @@ namespace omochat
                                     continue;
                                 }
 
-                                // ユーザー取得
-                                if (user != null)
+                                // ユーザー取得・更新
+                                lock (Users)
                                 {
-                                    user.Nickname = nickname;
-                                    user.LastActivity = DateTime.Now;
-                                    Tools.SaveUsers(Users);
-                                    // 辞書に追加（上書き）
-                                    Users[nostrEvent.PublicKey] = user;
-                                }
-                                else
-                                {
-                                    var newUserData = new User
+                                    if (Users.TryGetValue(nostrEvent.PublicKey, out user) && user != null)
                                     {
-                                        Nickname = n[0],
-                                        LastActivity = DateTime.Now
-                                    };
-                                    Tools.SaveUsers(Users);
-                                    // 辞書に追加（上書き）
-                                    Users[nostrEvent.PublicKey] = newUserData;
+                                        user.Nickname = nickname;
+                                        user.LastActivity = DateTime.Now;
+                                    }
+                                    else
+                                    {
+                                        user = new User
+                                        {
+                                            Nickname = nickname,
+                                            LastActivity = DateTime.Now
+                                        };
+                                        Users[nostrEvent.PublicKey] = user;
+                                    }
                                 }
                             }
                             else
                             {
                                 nickname = GetUserName(nostrEvent.PublicKey);
+                                if (nickname == "???" && nostrEvent.PublicKey.Length >= 8)
+                                {
+                                    nickname = nostrEvent.PublicKey[..8];
+                                }
                             }
 
                             // tタグ
                             var t = nostrEvent.GetTaggedData("t");
 
-                            // プロフィール購読
+                            // プロフィール購読とインデクサ取得
                             await NostrAccess.SubscribeProfilesAsync([nostrEvent.PublicKey]);
+                            FetchProfileIfNeeded(nostrEvent.PublicKey);
 
-                            // ユーザー取得
-                            user = await GetUserAsync(nostrEvent.PublicKey);
+                            if (user == null)
+                            {
+                                Users.TryGetValue(nostrEvent.PublicKey, out user);
+                            }
 
                             bool isReply = false;
                             var e = nostrEvent.GetTaggedData("e");
@@ -618,31 +639,9 @@ namespace omochat
         }
         #endregion
 
-        #region ユーザー取得
-        private async Task<User?> GetUserAsync(string pubkey)
-        {
-            User? user = null;
-            int retryCount = 0;
-            while (retryCount < 10)
-            {
-                Debug.WriteLine($"retryCount = {retryCount} {GetUserName(pubkey)}");
-                Users.TryGetValue(pubkey, out user);
-                // ユーザーが見つかった場合、ループを抜ける
-                if (user != null)
-                {
-                    break;
-                }
-                // 一定時間待機してから再試行
-                await Task.Delay(100);
-                retryCount++;
-            }
-            return user;
-        }
-        #endregion
-
         #region Stopボタン
         // Stopボタン
-        private void ButtonStop_Click(object sender, EventArgs e)
+        private async void ButtonStop_Click(object sender, EventArgs e)
         {
             if (NostrAccess.Clients == null)
             {
@@ -654,10 +653,12 @@ namespace omochat
                 NostrAccess.CloseSubscriptions();
                 labelRelays.Text = "Close subscription.";
 
-                _ = NostrAccess.Clients.Disconnect();
+                await NostrAccess.Clients.Disconnect();
                 labelRelays.Text = "Disconnect.";
                 NostrAccess.Clients.Dispose();
                 NostrAccess.Clients = null;
+
+                Tools.SaveUsers(Users);
 
                 buttonStart.Enabled = true;
                 buttonStart.Focus();
@@ -987,7 +988,6 @@ namespace omochat
                 userName = user.Name;
                 // 取得日更新
                 user.LastActivity = DateTime.Now;
-                Tools.SaveUsers(Users);
             }
             return userName;
         }
@@ -1019,7 +1019,6 @@ namespace omochat
                 }
                 // 取得日更新
                 user.LastActivity = DateTime.Now;
-                Tools.SaveUsers(Users);
                 //Debug.WriteLine($"名前取得: {user.DisplayName} @{user.Name} 📛{user.PetName}");
             }
             return userName;
@@ -1674,6 +1673,103 @@ namespace omochat
             if (_minimizeToTray && WindowState == FormWindowState.Minimized)
             {
                 Hide();
+            }
+        }
+        #endregion
+
+        #region プロフィール取得（インデクサ連携）
+        private void FetchProfileIfNeeded(string pubkey)
+        {
+            if (string.IsNullOrEmpty(pubkey)) return;
+
+            // 既に有効な表示名がある場合は再取得不要
+            if (Users.TryGetValue(pubkey, out var existingUser) && existingUser != null)
+            {
+                if (!string.IsNullOrEmpty(existingUser.DisplayName) || !string.IsNullOrEmpty(existingUser.Name) || !string.IsNullOrEmpty(existingUser.Nickname))
+                {
+                    return;
+                }
+            }
+
+            lock (_fetchingProfileHexs)
+            {
+                if (_fetchingProfileHexs.Contains(pubkey)) return;
+                _fetchingProfileHexs.Add(pubkey);
+            }
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var profileEvent = await NostrAccess.FetchProfileFromIndexerAsync(pubkey);
+                    if (profileEvent?.Content != null)
+                    {
+                        var newUserData = Tools.JsonToUser(profileEvent.Content, profileEvent.CreatedAt);
+                        if (newUserData != null)
+                        {
+                            string resolvedName = string.Empty;
+                            lock (Users)
+                            {
+                                DateTimeOffset? createdAt = DateTimeOffset.MinValue;
+                                if (Users.TryGetValue(pubkey, out User? existingUserData))
+                                {
+                                    createdAt = existingUserData?.CreatedAt;
+                                    newUserData.Nickname = existingUserData?.Nickname;
+                                    if (false == existingUserData?.Mute)
+                                    {
+                                        newUserData.Mute = false;
+                                    }
+                                }
+                                if (createdAt == null || (createdAt < newUserData.CreatedAt))
+                                {
+                                    newUserData.LastActivity = DateTime.Now;
+                                    Users[pubkey] = newUserData;
+                                    Debug.WriteLine($"[Indexer] プロフィール取得成功: {newUserData.DisplayName} @{newUserData.Name} ({pubkey[..8]})");
+                                }
+                            }
+
+                            resolvedName = GetUserName(pubkey);
+                            if (dataGridViewNotes.IsHandleCreated)
+                            {
+                                dataGridViewNotes.BeginInvoke(new Action(() => UpdateGridProfile(pubkey, resolvedName)));
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"FetchProfileIfNeeded エラー: {ex.Message}");
+                }
+                finally
+                {
+                    lock (_fetchingProfileHexs)
+                    {
+                        _fetchingProfileHexs.Remove(pubkey);
+                    }
+                }
+            });
+        }
+
+        private void UpdateGridProfile(string pubkey, string name)
+        {
+            try
+            {
+                foreach (DataGridViewRow row in dataGridViewNotes.Rows)
+                {
+                    if (row.Cells["pubkey"]?.Value?.ToString() == pubkey)
+                    {
+                        var currentNameCell = row.Cells["name"]?.Value?.ToString();
+                        // 未解決表示の場合（???や短縮キー）であれば名前を更新
+                        if (string.IsNullOrEmpty(currentNameCell) || currentNameCell == "???" || (pubkey.Length >= 8 && currentNameCell == pubkey[..8]))
+                        {
+                            row.Cells["name"].Value = name;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"UpdateGridProfile エラー: {ex.Message}");
             }
         }
         #endregion
