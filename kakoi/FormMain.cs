@@ -427,13 +427,12 @@ namespace omochat
                             // tタグ
                             var t = nostrEvent.GetTaggedData("t");
 
-                            // プロフィール購読とインデクサ取得
-                            await NostrAccess.SubscribeProfilesAsync([nostrEvent.PublicKey]);
+                            // プロフィール取得（通常リレー＋インデクサリレー）
                             FetchProfileIfNeeded(nostrEvent.PublicKey);
 
                             if (user == null)
                             {
-                                Users.TryGetValue(nostrEvent.PublicKey, out user);
+                                lock (Users) { Users.TryGetValue(nostrEvent.PublicKey, out user); }
                             }
 
                             bool isReply = false;
@@ -1729,7 +1728,7 @@ namespace omochat
                 bool fetched = false;
                 try
                 {
-                    var profileEvent = await NostrAccess.FetchProfileFromIndexerAsync(pubkey);
+                    var profileEvent = await NostrAccess.FetchLatestProfileAsync(pubkey);
                     if (profileEvent?.Content != null)
                     {
                         fetched = true;
@@ -1755,7 +1754,7 @@ namespace omochat
                                     Users[pubkey] = newUserData;
                                     updated = true;
                                     var shortKey = pubkey.Length >= 8 ? pubkey[..8] : pubkey;
-                                    Debug.WriteLine($"[Indexer] プロフィール取得成功: {newUserData.DisplayName} @{newUserData.Name} ({shortKey})");
+                                    Debug.WriteLine($"[Profile] プロフィール更新: {newUserData.DisplayName} @{newUserData.Name} ({shortKey})");
                                 }
                             }
 
