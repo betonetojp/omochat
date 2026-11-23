@@ -45,6 +45,12 @@ namespace omochat
         /// プロフィール取得中の公開鍵セット
         /// </summary>
         private readonly HashSet<string> _fetchingProfileHexs = [];
+        /// <summary>
+        /// プロフィール最終取得時刻キャッシュ
+        /// </summary>
+        private readonly Dictionary<string, DateTime> _profileLastFetchedAt = [];
+        private static readonly TimeSpan ProfileRefreshInterval = TimeSpan.FromMinutes(30);
+        private static readonly TimeSpan ProfileRetryCooldown = TimeSpan.FromMinutes(1);
 
         private bool _minimizeToTray;
         private bool _worldView = true;
@@ -455,6 +461,7 @@ namespace omochat
                             // グリッドに表示
                             //_noteEvents.AddFirst(nostrEvent);
                             DateTimeOffset dto = nostrEvent.CreatedAt ?? DateTimeOffset.Now;
+                            string shortHash = nostrEvent.PublicKey.Length >= 4 ? nostrEvent.PublicKey[^4..] : nostrEvent.PublicKey;
                             if (_descendingOrder)
                             {
                                 dataGridViewNotes.Rows.Insert(
@@ -462,7 +469,7 @@ namespace omochat
                                     dto.ToLocalTime(),
                                     //$"{headMark} {userName}",
                                     nickname,
-                                    "#" + nostrEvent.PublicKey[^4..],
+                                    "#" + shortHash,
                                     editedContent,
                                     g[0],
                                     nostrEvent.Id,
@@ -501,7 +508,7 @@ namespace omochat
                                     dto.ToLocalTime(),
                                     //$"{headMark} {userName}",
                                     nickname,
-                                    "#" + nostrEvent.PublicKey[^4..],
+                                    "#" + shortHash,
                                     editedContent,
                                     g[0],
                                     nostrEvent.Id,
@@ -550,7 +557,7 @@ namespace omochat
                                 //string msg = content;
                                 Dictionary<string, string> SSTPHeader = new(_baseSSTPHeader)
                                 {
-                                    { "Reference1", "1" }, // kind
+                                    { "Reference1", $"{nostrEvent.Kind}" }, // kind
                                     { "Reference2", content }, // content
                                     { "Reference3", user?.Name ?? "???" }, // name
                                     { "Reference4", user?.DisplayName ?? string.Empty }, // display_name
@@ -562,7 +569,7 @@ namespace omochat
                                     { "Reference10", t != null && t.Length > 0 && t[0] != null ? t[0] : "" }, // t
                                     { "Script", $"{speaker}{nickname}\\n{editedContent}\\e" }
                                 };
-                                string sstpmsg = _SSTPMethod + "\r\n" + string.Join("\r\n", SSTPHeader.Select(kvp => kvp.Key + ": " + kvp.Value.Replace("\n", "\\n"))) + "\r\n\r\n";
+                                string sstpmsg = _SSTPMethod + "\r\n" + string.Join("\r\n", SSTPHeader.Select(kvp => kvp.Key + ": " + SanitizeSstpValue(kvp.Value))) + "\r\n\r\n";
                                 string r = _ds.GetSSTPResponse(_ghostName, sstpmsg);
                                 //Debug.WriteLine(r);
                             }
@@ -579,7 +586,7 @@ namespace omochat
         #endregion
 
         #region グリッド行装飾
-        private async Task EditRowAsync(NostrEvent nostrEvent, User user, string userName)
+        private async Task EditRowAsync(NostrEvent nostrEvent, User? user, string userName)
         {
             var addIndex = 0;
             if (_descendingOrder)
@@ -691,7 +698,8 @@ namespace omochat
 
             try
             {
-                _ = PostAsync(rootEvent);
+                string postText = _formPostBar.textBoxPost.Text;
+                _ = PostAsync(postText, rootEvent);
 
                 _formPostBar.textBoxPost.Text = string.Empty;
                 _formPostBar.textBoxPost.PlaceholderText = string.Empty;
@@ -721,7 +729,7 @@ namespace omochat
         /// 投稿処理
         /// </summary>
         /// <returns></returns>
-        private async Task PostAsync(NostrEvent? rootEvent = null)
+        private async Task PostAsync(string content, NostrEvent? rootEvent = null)
         {
             if (NostrAccess.Clients == null)
             {
@@ -752,9 +760,9 @@ namespace omochat
             var newEvent = new NostrEvent()
             {
                 Kind = 20000,
-                Content = _formPostBar.textBoxPost.Text
-                            //.Replace("\\n", "\r\n") // 本体の改行をポストバーのマルチラインに合わせる→廃止
-                            .Replace("\r\n", "\n"),
+                Content = content
+                            .Replace("\r\n", "\n")
+                            .Replace("\r", "\n"),
                 Tags = tags
             };
 
@@ -981,11 +989,15 @@ namespace omochat
         private string? GetName(string publicKeyHex)
         {
             // 情報があればユーザー名を取得
-            Users.TryGetValue(publicKeyHex, out User? user);
+            User? user;
+            lock (Users)
+            {
+                Users.TryGetValue(publicKeyHex, out user);
+            }
             string? userName = string.Empty;
             if (user != null)
             {
-                userName = user.Name;
+                userName = !string.IsNullOrEmpty(user.Name) ? user.Name : user.DisplayName;
                 // 取得日更新
                 user.LastActivity = DateTime.Now;
             }
@@ -1002,24 +1014,32 @@ namespace omochat
         private string GetUserName(string publicKeyHex)
         {
             // 情報があれば表示名を取得
-            Users.TryGetValue(publicKeyHex, out User? user);
+            User? user;
+            lock (Users)
+            {
+                Users.TryGetValue(publicKeyHex, out user);
+            }
             string? userName = "???";
             if (user != null)
             {
                 userName = user.DisplayName;
-                // display_nameが無い場合は@nameとする
-                if (userName == null || string.Empty == userName)
+                // display_nameが無い場合はnameとする
+                if (string.IsNullOrEmpty(userName))
                 {
-                    userName = $"{user.Name}";
+                    userName = user.Name;
                 }
                 // nicknameがある場合はnicknameとする
-                if (!string.IsNullOrEmpty(user?.Nickname))
+                if (!string.IsNullOrEmpty(user.Nickname))
                 {
-                    userName = $"{user.Nickname}";
+                    userName = user.Nickname;
+                }
+                // どれも空の場合は???とする
+                if (string.IsNullOrEmpty(userName))
+                {
+                    userName = "???";
                 }
                 // 取得日更新
                 user.LastActivity = DateTime.Now;
-                //Debug.WriteLine($"名前取得: {user.DisplayName} @{user.Name} 📛{user.PetName}");
             }
             return userName;
         }
@@ -1033,9 +1053,9 @@ namespace omochat
         /// <returns>ミュートフラグ</returns>
         private bool IsMuted(string publicKeyHex)
         {
-            if (Users.TryGetValue(publicKeyHex, out User? user))
+            lock (Users)
             {
-                if (user != null)
+                if (Users.TryGetValue(publicKeyHex, out User? user) && user != null)
                 {
                     return user.Mute;
                 }
@@ -1043,6 +1063,11 @@ namespace omochat
             return false;
         }
         #endregion
+
+        private static string SanitizeSstpValue(string value)
+        {
+            return value.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\\n");
+        }
 
         #region 閉じる
         // 閉じる
@@ -1396,16 +1421,9 @@ namespace omochat
                 {
                     var name = (string)dataGridViewNotes.Rows[dataGridViewNotes.SelectedRows[0].Index].Cells["name"].Value;
                     var hash = (string)dataGridViewNotes.Rows[dataGridViewNotes.SelectedRows[0].Index].Cells["hash"].Value;
-                    _formPostBar.textBoxPost.Text = $"* 🫂 {_nickname} hugs {name}{hash} *";
+                    string hugText = $"* 🫂 {_nickname} hugs {name}{hash} *";
 
-                    _ = PostAsync();
-
-                    _formPostBar.textBoxPost.Text = string.Empty;
-                    _formPostBar.textBoxPost.PlaceholderText = string.Empty;
-                    _formPostBar.RootEvent = null;
-                    // デフォルトの色に戻す
-                    _formPostBar.textBoxPost.BackColor = SystemColors.Window;
-                    _formPostBar.buttonPost.BackColor = SystemColors.Control;
+                    _ = PostAsync(hugText);
                 }
             }
             // Tキーでslap
@@ -1415,16 +1433,9 @@ namespace omochat
                 {
                     var name = (string)dataGridViewNotes.Rows[dataGridViewNotes.SelectedRows[0].Index].Cells["name"].Value;
                     var hash = (string)dataGridViewNotes.Rows[dataGridViewNotes.SelectedRows[0].Index].Cells["hash"].Value;
-                    _formPostBar.textBoxPost.Text = $"* 🐟 {_nickname} slaps {name}{hash} around a bit with a large trout *";
+                    string slapText = $"* 🐟 {_nickname} slaps {name}{hash} around a bit with a large trout *";
 
-                    _ = PostAsync();
-
-                    _formPostBar.textBoxPost.Text = string.Empty;
-                    _formPostBar.textBoxPost.PlaceholderText = string.Empty;
-                    _formPostBar.RootEvent = null;
-                    // デフォルトの色に戻す
-                    _formPostBar.textBoxPost.BackColor = SystemColors.Window;
-                    _formPostBar.buttonPost.BackColor = SystemColors.Control;
+                    _ = PostAsync(slapText);
                 }
             }
             // Xキーで選択行のGeohashを_geohashにセット
@@ -1489,6 +1500,10 @@ namespace omochat
         #region セル右クリック
         private void DataGridViewNotes_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
+            if (e.RowIndex < 0)
+            {
+                return;
+            }
             if (e.Button == MouseButtons.Right)
             {
                 dataGridViewNotes.Rows[e.RowIndex].Selected = true;
@@ -1682,32 +1697,46 @@ namespace omochat
         {
             if (string.IsNullOrEmpty(pubkey)) return;
 
-            // 既に有効な表示名がある場合は再取得不要
-            if (Users.TryGetValue(pubkey, out var existingUser) && existingUser != null)
-            {
-                if (!string.IsNullOrEmpty(existingUser.DisplayName) || !string.IsNullOrEmpty(existingUser.Name) || !string.IsNullOrEmpty(existingUser.Nickname))
-                {
-                    return;
-                }
-            }
-
+            var now = DateTime.UtcNow;
             lock (_fetchingProfileHexs)
             {
                 if (_fetchingProfileHexs.Contains(pubkey)) return;
+
+                bool hasValidName = false;
+                lock (Users)
+                {
+                    if (Users.TryGetValue(pubkey, out var existingUser) && existingUser != null)
+                    {
+                        hasValidName = !string.IsNullOrEmpty(existingUser.DisplayName)
+                            || !string.IsNullOrEmpty(existingUser.Name)
+                            || !string.IsNullOrEmpty(existingUser.Nickname);
+                    }
+                }
+
+                bool isFresh = _profileLastFetchedAt.TryGetValue(pubkey, out var lastFetched)
+                    && (now - lastFetched) < ProfileRefreshInterval;
+
+                if (hasValidName && isFresh)
+                {
+                    return;
+                }
+
                 _fetchingProfileHexs.Add(pubkey);
             }
 
             _ = Task.Run(async () =>
             {
+                bool fetched = false;
                 try
                 {
                     var profileEvent = await NostrAccess.FetchProfileFromIndexerAsync(pubkey);
                     if (profileEvent?.Content != null)
                     {
+                        fetched = true;
                         var newUserData = Tools.JsonToUser(profileEvent.Content, profileEvent.CreatedAt);
                         if (newUserData != null)
                         {
-                            string resolvedName = string.Empty;
+                            bool updated = false;
                             lock (Users)
                             {
                                 DateTimeOffset? createdAt = DateTimeOffset.MinValue;
@@ -1724,14 +1753,19 @@ namespace omochat
                                 {
                                     newUserData.LastActivity = DateTime.Now;
                                     Users[pubkey] = newUserData;
-                                    Debug.WriteLine($"[Indexer] プロフィール取得成功: {newUserData.DisplayName} @{newUserData.Name} ({pubkey[..8]})");
+                                    updated = true;
+                                    var shortKey = pubkey.Length >= 8 ? pubkey[..8] : pubkey;
+                                    Debug.WriteLine($"[Indexer] プロフィール取得成功: {newUserData.DisplayName} @{newUserData.Name} ({shortKey})");
                                 }
                             }
 
-                            resolvedName = GetUserName(pubkey);
-                            if (dataGridViewNotes.IsHandleCreated)
+                            if (updated)
                             {
-                                dataGridViewNotes.BeginInvoke(new Action(() => UpdateGridProfile(pubkey, resolvedName)));
+                                var resolvedName = GetUserName(pubkey);
+                                if (!IsDisposed && dataGridViewNotes.IsHandleCreated)
+                                {
+                                    dataGridViewNotes.BeginInvoke(new Action(() => UpdateGridProfile(pubkey, resolvedName)));
+                                }
                             }
                         }
                     }
@@ -1744,6 +1778,9 @@ namespace omochat
                 {
                     lock (_fetchingProfileHexs)
                     {
+                        _profileLastFetchedAt[pubkey] = fetched
+                            ? DateTime.UtcNow
+                            : DateTime.UtcNow - ProfileRefreshInterval + ProfileRetryCooldown;
                         _fetchingProfileHexs.Remove(pubkey);
                     }
                 }

@@ -5,7 +5,7 @@
   <PropertyGroup>
 	  <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows7.0</TargetFramework>
-    <Version>$(VersionPrefix)0.2.0</Version>
+    <Version>$(VersionPrefix)0.3.0</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <UseWindowsForms>True</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -24,21 +24,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="NoEscapingJavaScriptEncoder.cs" />
-    <Compile Remove="NoEscapingJsonEncoder.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Include="Resources\kakoi.ico" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CredentialManagement" Version="1.0.2" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4191.47" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4370.26" />
+    <PackageReference Include="NBitcoin.Secp256k1" Version="4.0.4" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NNostr.Client\NNostr.Client.csproj" />
     <ProjectReference Include="..\SSTPLib\SSTPLib.csproj" />
   </ItemGroup>
 
@@ -80,5 +74,11 @@
 	<PropertyGroup>
 	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
+
+  <Target Name="RemoveUnusedWebView2WpfReference" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <Reference Remove="@(Reference)" Condition="'%(Reference.Filename)' == 'Microsoft.Web.WebView2.Wpf'" />
+    </ItemGroup>
+  </Target>
 
 </Project>

@@ -14,7 +14,7 @@ Bitchat のタイムラインを覗いたり投稿したりできるシンプル
 ## 主な機能
 
 - **Bitchat タイムライン受信**: Bitchat 形式（kind: 20000）のメッセージをリアルタイム受信
-- **インデクサリレー連携**: プロフィール未取得のアカウントもインデクサリレー（`directory.yabu.me`）から非同期に自動取得
+- **インデクサリレー連携**: プロフィール未取得または一定時間（30分）経過したアカウントはインデクサリレー（`directory.yabu.me`）から最新プロフィールを非同期に自動取得し、`display_name` の変更にも追従
 - **投稿機能**: ポストバーから Bitchat へのメッセージ投稿（設定画面で Nostr 秘密鍵 `nsec1...` の登録が必要）
 - **Geohash 表示・フィルタ**: 各投稿の Geohash 表示、選択行の Geohash へのジャンプ（Xキー）、World view（所属外をグレー表示）の切り替え
 - **Web ビュー・Google 翻訳連携**: 投稿を内蔵 Web ビューで開く機能および Google 翻訳によるワンキー翻訳
@@ -75,7 +75,9 @@ Bitchat のタイムラインを覗いたり投稿したりできるシンプル
 ---
 
 ## 利用ライブラリ / NuGet パッケージ
-- [CredentialManagement](https://www.nuget.org/packages/CredentialManagement)
 - [Microsoft.Web.WebView2](https://www.nuget.org/packages/Microsoft.Web.WebView2)
-- [NNostr](https://github.com/Kukks/NNostr) (NNostr.Client を一部変更して同梱)
-- [DirectSSTPTester](https://github.com/nikolat/DirectSSTPTester) (SSTPLib を利用)
+- [NBitcoin.Secp256k1](https://www.nuget.org/packages/NBitcoin.Secp256k1)
+- [NNostr](https://github.com/Kukks/NNostr)（必要なクライアント機能のみ抜粋・カスタマイズして `kakoi/Nostr` に統合）
+- [DirectSSTPTester](https://github.com/nikolat/DirectSSTPTester)（SSTPLib を利用）
+
+※ 秘密鍵（`nsec`）は DPAPI で暗号化したうえで、Windows 標準 API（`advapi32.dll`）経由で Windows 資格情報マネージャーに保存されます。

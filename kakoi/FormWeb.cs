@@ -44,6 +44,10 @@ namespace omochat
                 }
 
                 var core = webView2.CoreWebView2;
+                if (core == null)
+                {
+                    return;
+                }
 
                 // WebMessage hook (一度だけ)
                 if (!_webMessageHooked)

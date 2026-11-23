@@ -1,4 +1,3 @@
-using CredentialManagement;
 using NBitcoin.Secp256k1;
 using NNostr.Client;
 using NNostr.Client.JsonConverters;
@@ -505,56 +504,26 @@ namespace omochat
         }
         #endregion
 
-        #region 管理
+        #region Windows資格情報管理
         public static void SavePassword(string target, string username, string password)
         {
-            using var cred = new Credential();
-            cred.Target = target;
-            cred.Username = username;
-            cred.Password = EncryptPassword(password); // パスワードを暗号化
-            cred.Type = CredentialType.Generic;
-            cred.PersistanceType = PersistanceType.LocalComputer;
-            cred.Save();
+            var encrypted = EncryptPassword(password); // パスワードを暗号化
+            WindowsCredentialStore.Save(target, username, encrypted);
         }
 
         public static string LoadPassword(string target)
         {
-            using var cred = new Credential();
-            cred.Target = target;
-            cred.Load();
-            return DecryptPassword(cred.Password); // パスワードを復号化
+            var encrypted = WindowsCredentialStore.Load(target);
+            if (string.IsNullOrEmpty(encrypted))
+            {
+                return string.Empty;
+            }
+            return DecryptPassword(encrypted); // パスワードを復号化
         }
 
         public static void DeletePassword(string target)
         {
-            var cred = new Credential { Target = target };
-            cred.Delete();
-        }
-        #endregion
-
-        #region APIキー管理
-        public static void SaveApiKey(string target, string apiKey)
-        {
-            using var cred = new Credential();
-            cred.Target = target;
-            cred.Password = EncryptPassword(apiKey); // APIキーを暗号化
-            cred.Type = CredentialType.Generic;
-            cred.PersistanceType = PersistanceType.LocalComputer;
-            cred.Save();
-        }
-
-        public static string LoadApiKey(string target)
-        {
-            using var cred = new Credential();
-            cred.Target = target;
-            cred.Load();
-            return DecryptPassword(cred.Password); // APIキーを復号化
-        }
-
-        public static void DeleteApiKey(string target)
-        {
-            var cred = new Credential { Target = target };
-            cred.Delete();
+            WindowsCredentialStore.Delete(target);
         }
         #endregion
     }
